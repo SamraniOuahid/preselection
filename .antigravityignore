@@ -1,0 +1,17 @@
+# --- Frontend ---
+**/frontend/node_modules/**
+**/frontend/dist/**
+**/frontend/build/**
+**/frontend/cache/**
+**/frontend/.vite/**
+**/frontend/package-lock.json
+**/frontend/venv/**
+**/frontend/__pycache__/**
+**/frontend/*.pyc
+**/frontend/.env*
+
+# --- Backend / App (ENSA Béni-Mellal Preselection) ---
+**/ensa-bm-preselection/venv/**
+**/ensa-bm-preselection/__pycache__/**
+**/ensa-bm-preselection/*.pyc
+**/ensa-bm-preselection/.env*

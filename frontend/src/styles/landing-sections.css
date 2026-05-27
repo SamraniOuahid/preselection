@@ -1,0 +1,139 @@
+/* ═══ COMMON SECTION ═══ */
+.ensa-landing{overflow-x:hidden}
+.ensa-container{max-width:1200px;margin:0 auto;padding:0 24px}
+.ensa-section{padding:80px 0}
+.ensa-section-white{background:#fff}
+.ensa-section-gray{background:#F7F9FC}
+.ensa-section-header{text-align:center;margin-bottom:56px}
+.ensa-badge-section{display:inline-flex;padding:6px 16px;border-radius:100px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#2471A3;background:#EBF5FB;border:1px solid #D6EAF8;margin-bottom:16px}
+.ensa-section-title{font-family:var(--font-family-display);font-size:32px;font-weight:700;color:#1A1A2E;margin-bottom:12px;line-height:1.3}
+.ensa-section-desc{color:#5D6D7E;font-size:15px;max-width:560px;margin:0 auto;line-height:1.7}
+.ensa-text-gradient{background:linear-gradient(135deg,#2E86C1 0%,#5DADE2 50%,#1B3A6B 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* ═══ SERVICES ═══ */
+.ensa-services{background:#F7F9FC;padding:60px 0}
+.ensa-services-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.ensa-services-title{font-family:var(--font-family-display);font-size:24px;font-weight:700;color:#1A1A2E}
+.ensa-services-more{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:#2E86C1;text-decoration:none;transition:color .2s}
+.ensa-services-more:hover{color:#1B3A6B}
+.ensa-services-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.ensa-services-grid .ensa-service-card{opacity:0;transform:translateY(20px);transition:all .5s ease}
+.ensa-services-grid.is-visible .ensa-service-card{opacity:1;transform:translateY(0)}
+.ensa-service-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:28px 24px;text-decoration:none;transition:all .3s;display:block;position:relative;overflow:hidden}
+.ensa-service-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--accent);opacity:0;transition:opacity .3s}
+.ensa-service-card:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(0,0,0,.08);border-color:transparent}
+.ensa-service-card:hover::after{opacity:1}
+.ensa-service-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:16px}
+.ensa-service-name{font-size:16px;font-weight:700;color:#1A1A2E;margin-bottom:6px}
+.ensa-service-desc{font-size:13px;color:#5D6D7E;line-height:1.5}
+@media(max-width:1024px){.ensa-services-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.ensa-services-grid{grid-template-columns:1fr}.ensa-services-header{flex-direction:column;gap:8px;align-items:flex-start}}
+
+/* ═══ TIMELINE PROCESSUS ═══ */
+.ensa-timeline{display:flex;flex-direction:column;gap:0;position:relative;padding-left:40px}
+.ensa-timeline::before{content:'';position:absolute;left:19px;top:0;bottom:0;width:2px;background:#D6EAF8}
+.ensa-timeline-item{position:relative;padding-bottom:36px;opacity:0;transform:translateX(-20px);transition:all .5s ease}
+.ensa-timeline.is-visible .ensa-timeline-item{opacity:1;transform:translateX(0)}
+.ensa-timeline-item:last-child{padding-bottom:0}
+.ensa-timeline-marker{position:absolute;left:-40px;top:0;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;z-index:2;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.ensa-timeline-content{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:20px 24px;transition:all .3s}
+.ensa-timeline-content:hover{box-shadow:0 4px 16px rgba(0,0,0,.06);border-color:#D6EAF8}
+.ensa-timeline-step{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#2E86C1;margin-bottom:4px;display:block}
+.ensa-timeline-label{font-size:16px;font-weight:700;color:#1A1A2E;margin-bottom:4px}
+.ensa-timeline-desc{font-size:13px;color:#5D6D7E;line-height:1.5}
+@media(max-width:768px){.ensa-timeline{padding-left:32px}.ensa-timeline::before{left:15px}.ensa-timeline-marker{left:-32px;width:32px;height:32px;border-radius:10px}}
+
+/* ═══ FILIÈRES ═══ */
+.ensa-filieres-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.ensa-filieres-grid .ensa-filiere-card{opacity:0;transform:translateY(15px);transition:all .4s}
+.ensa-filieres-grid.is-visible .ensa-filiere-card{opacity:1;transform:translateY(0)}
+.ensa-filiere-col-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #D6EAF8}
+.ensa-filiere-col-icon{width:44px;height:44px;border-radius:12px;background:var(--col-accent,#2E86C1);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.ensa-filiere-col-title{font-size:16px;font-weight:700;color:#1A1A2E}
+.ensa-filiere-col-places{font-size:12px;color:#95A5A6;margin-top:2px}
+.ensa-filiere-list{display:flex;flex-direction:column;gap:10px}
+.ensa-filiere-card{background:#fff;border:1px solid #D5D8DC;border-radius:14px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;transition:all .25s}
+.ensa-filiere-card:hover{border-color:#AED6F1;box-shadow:0 4px 16px rgba(46,134,193,.1);transform:translateY(-2px)}
+.ensa-filiere-info{display:flex;align-items:center;gap:14px}
+.ensa-filiere-code{font-family:var(--font-family-mono);font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;min-width:44px;text-align:center}
+.ensa-filiere-name{font-size:14px;font-weight:600;color:#1A1A2E}
+.ensa-filiere-meta{display:flex;align-items:center;gap:10px;margin-top:4px;font-size:12px;color:#95A5A6}
+.ensa-filiere-status.is-open{color:#229954;font-weight:700;font-size:11px}
+.ensa-filiere-status.is-closed{color:#C0392B;font-weight:700;font-size:11px}
+.ensa-filiere-cta{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;text-decoration:none;padding:8px 16px;border-radius:10px;transition:all .2s;white-space:nowrap}
+.ensa-filiere-cta:hover{filter:brightness(.85)}
+@media(max-width:768px){.ensa-filieres-grid{grid-template-columns:1fr}}
+
+/* ═══ ANNONCES ═══ */
+.ensa-annonces-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.ensa-annonces-grid .ensa-annonce-card{opacity:0;transform:translateY(20px);transition:all .5s}
+.ensa-annonces-grid.is-visible .ensa-annonce-card{opacity:1;transform:translateY(0)}
+.ensa-annonce-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:28px 24px;transition:all .3s;position:relative;overflow:hidden}
+.ensa-annonce-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#2E86C1,#5DADE2);opacity:0;transition:opacity .3s}
+.ensa-annonce-card:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(0,0,0,.08);border-color:transparent}
+.ensa-annonce-card:hover::before{opacity:1}
+.ensa-annonce-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.ensa-annonce-cat{padding:4px 12px;border-radius:100px;font-size:11px;font-weight:700;background:#EBF5FB;color:#2471A3;text-transform:uppercase;letter-spacing:.5px}
+.ensa-annonce-date{font-size:12px;color:#95A5A6}
+.ensa-annonce-title{font-size:16px;font-weight:700;color:#1A1A2E;margin-bottom:10px;line-height:1.4}
+.ensa-annonce-excerpt{font-size:13px;color:#5D6D7E;line-height:1.6;margin-bottom:16px}
+.ensa-annonce-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#2E86C1;text-decoration:none;transition:color .2s}
+.ensa-annonce-link:hover{color:#1B3A6B}
+@media(max-width:1024px){.ensa-annonces-grid{grid-template-columns:1fr}}
+
+/* ═══ STATS ═══ */
+.ensa-stats{position:relative;padding:60px 24px;overflow:hidden}
+.ensa-stats-overlay{position:absolute;inset:0;background:linear-gradient(135deg,#0D1F3C 0%,#1B3A6B 50%,#2E86C1 100%)}
+.ensa-stats-inner{position:relative;z-index:1;display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.ensa-stat-item{text-align:center;padding:24px 16px}
+.ensa-stat-number{font-family:var(--font-family-display);font-size:40px;font-weight:700;color:#fff;line-height:1;margin-bottom:8px}
+.ensa-stat-label{font-size:13px;color:rgba(255,255,255,.55);font-weight:500}
+@media(max-width:768px){.ensa-stats-inner{grid-template-columns:repeat(2,1fr)}.ensa-stat-number{font-size:32px}}
+
+/* ═══ DOCUMENTS ═══ */
+.ensa-docs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.ensa-docs-grid .ensa-doc-card{opacity:0;transform:translateY(20px);transition:all .5s}
+.ensa-docs-grid.is-visible .ensa-doc-card{opacity:1;transform:translateY(0)}
+.ensa-doc-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:28px 24px;transition:all .3s;position:relative;overflow:hidden}
+.ensa-doc-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#2E86C1,#5DADE2);opacity:0;transition:opacity .3s}
+.ensa-doc-card:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(0,0,0,.08);border-color:transparent}
+.ensa-doc-card:hover::before{opacity:1}
+.ensa-doc-icon{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#EBF5FB,#D6EAF8);display:flex;align-items:center;justify-content:center;color:#2471A3;margin-bottom:18px}
+.ensa-doc-title{font-size:15px;font-weight:700;color:#1A1A2E;margin-bottom:14px;line-height:1.4}
+.ensa-doc-details{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.ensa-doc-detail{display:flex;align-items:center;gap:8px;font-size:12px;color:#95A5A6}
+.ensa-doc-tip{display:flex;align-items:center;gap:8px;padding-top:12px;border-top:1px solid #EEF0F2;font-size:12px;color:#229954;font-weight:500}
+@media(max-width:1024px){.ensa-docs-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.ensa-docs-grid{grid-template-columns:1fr}}
+
+/* ═══ FAQ ═══ */
+.ensa-faq-list{display:flex;flex-direction:column;gap:10px}
+.ensa-faq-list .ensa-faq-item{opacity:0;transform:translateY(15px);transition:all .4s}
+.ensa-faq-list.is-visible .ensa-faq-item{opacity:1;transform:translateY(0)}
+.ensa-faq-item{background:#fff;border:1px solid #D5D8DC;border-radius:14px;overflow:hidden;transition:all .25s}
+.ensa-faq-item.is-open{border-color:#AED6F1;box-shadow:0 4px 16px rgba(46,134,193,.08)}
+.ensa-faq-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px;background:none;border:none;cursor:pointer;text-align:left;font-family:inherit}
+.ensa-faq-question{font-size:14px;font-weight:600;color:#1A1A2E;line-height:1.5}
+.ensa-faq-chevron{color:#95A5A6;flex-shrink:0;transition:transform .3s}
+.ensa-faq-chevron.is-rotated{transform:rotate(180deg)}
+.ensa-faq-content{max-height:0;overflow:hidden;transition:max-height .35s ease,padding .35s ease;padding:0 24px}
+.ensa-faq-content.is-open{max-height:200px;padding:0 24px 20px}
+.ensa-faq-answer{font-size:14px;color:#5D6D7E;line-height:1.7}
+
+/* ═══ CTA ═══ */
+.ensa-cta{position:relative;padding:80px 24px;overflow:hidden;text-align:center}
+.ensa-cta-bg{position:absolute;inset:0;background:linear-gradient(135deg,#142D52 0%,#1B3A6B 40%,#2E86C1 100%)}
+.ensa-cta-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 50%,rgba(93,173,226,.2)0%,transparent 50%),radial-gradient(circle at 80% 50%,rgba(255,255,255,.05)0%,transparent 50%)}
+.ensa-cta-content{position:relative;z-index:1;max-width:600px;margin:0 auto}
+.ensa-cta-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:100px;background:rgba(39,174,96,.2);border:1px solid rgba(39,174,96,.3);color:#82E0AA;font-size:12px;font-weight:700;margin-bottom:24px}
+.ensa-cta-title{font-family:var(--font-family-display);font-size:30px;font-weight:700;color:#fff;margin-bottom:16px;line-height:1.3}
+.ensa-cta-desc{font-size:15px;color:rgba(255,255,255,.6);line-height:1.7;margin-bottom:32px}
+.ensa-cta-actions{display:flex;flex-direction:column;align-items:center;gap:16px}
+.ensa-cta-btn-main{display:inline-flex;align-items:center;gap:10px;padding:16px 36px;border-radius:14px;background:#fff;color:#1B3A6B;font-weight:700;font-size:16px;text-decoration:none;transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.15)}
+.ensa-cta-btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.ensa-cta-btn-login{color:rgba(255,255,255,.6);font-size:14px;text-decoration:none;font-weight:500;transition:color .2s}
+.ensa-cta-btn-login:hover{color:#fff}
+
+/* ═══ RESPONSIVE SECTIONS ═══ */
+@media(max-width:768px){.ensa-section{padding:56px 0}.ensa-section-title{font-size:26px}.ensa-cta-title{font-size:24px}}
+@media(max-width:480px){.ensa-hero-actions{flex-direction:column}}

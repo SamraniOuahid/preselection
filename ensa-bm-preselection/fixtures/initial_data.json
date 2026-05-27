@@ -1,0 +1,309 @@
+[
+  {
+    "model": "administration.filiere",
+    "pk": "a230dcd7-7677-40a0-8415-95afeada6064",
+    "fields": {
+      "nom": "Génie Informatique et Réseaux",
+      "code": "GIR2",
+      "niveau": "BAC2",
+      "description": "Filière de présélection Bac+2 en informatique et réseaux.",
+      "places_disponibles": 35,
+      "is_active": true,
+      "date_ouverture": "2026-05-01T08:00:00Z",
+      "date_fermeture": "2026-07-31T23:59:59Z",
+      "created_at": "2026-05-21T08:00:00Z"
+    }
+  },
+  {
+    "model": "administration.filiere",
+    "pk": "7b23e8a8-e78c-47b7-9e1e-a4c4b62ad32b",
+    "fields": {
+      "nom": "Génie Industriel",
+      "code": "GI2",
+      "niveau": "BAC2",
+      "description": "Filière de présélection Bac+2 en génie industriel.",
+      "places_disponibles": 30,
+      "is_active": true,
+      "date_ouverture": "2026-05-01T08:00:00Z",
+      "date_fermeture": "2026-07-31T23:59:59Z",
+      "created_at": "2026-05-21T08:00:00Z"
+    }
+  },
+  {
+    "model": "administration.filiere",
+    "pk": "6216582d-45ec-46e0-86a7-eb4693c62522",
+    "fields": {
+      "nom": "Génie Informatique",
+      "code": "GI3",
+      "niveau": "BAC3",
+      "description": "Filière de présélection Bac+3 en informatique.",
+      "places_disponibles": 25,
+      "is_active": true,
+      "date_ouverture": "2026-05-01T08:00:00Z",
+      "date_fermeture": "2026-07-31T23:59:59Z",
+      "created_at": "2026-05-21T08:00:00Z"
+    }
+  },
+  {
+    "model": "administration.filiere",
+    "pk": "8bbd9f7e-221f-4510-890d-3490875a67fc",
+    "fields": {
+      "nom": "Génie Électrique",
+      "code": "GE3",
+      "niveau": "BAC3",
+      "description": "Filière de présélection Bac+3 en génie électrique.",
+      "places_disponibles": 25,
+      "is_active": true,
+      "date_ouverture": "2026-05-01T08:00:00Z",
+      "date_fermeture": "2026-07-31T23:59:59Z",
+      "created_at": "2026-05-21T08:00:00Z"
+    }
+  },
+  {
+    "model": "administration.diplomaaccepte",
+    "pk": "bbc4bf72-97d8-44e6-8e07-180ab661eaed",
+    "fields": {
+      "filiere": "a230dcd7-7677-40a0-8415-95afeada6064",
+      "nom_diplome": "DUT Informatique",
+      "etablissements": [],
+      "is_active": true
+    }
+  },
+  {
+    "model": "administration.diplomaaccepte",
+    "pk": "72d70b41-6738-4ea1-98d1-6dc8636a7c9f",
+    "fields": {
+      "filiere": "a230dcd7-7677-40a0-8415-95afeada6064",
+      "nom_diplome": "DUT Réseaux et Télécommunications",
+      "etablissements": [],
+      "is_active": true
+    }
+  },
+  {
+    "model": "administration.diplomaaccepte",
+    "pk": "8caf5cbf-d4fe-470b-834b-2895cc1bd793",
+    "fields": {
+      "filiere": "a230dcd7-7677-40a0-8415-95afeada6064",
+      "nom_diplome": "BTS Informatique",
+      "etablissements": [],
+      "is_active": true
+    }
+  },
+  {
+    "model": "administration.diplomaaccepte",
+    "pk": "e5b3cd5f-a1b6-4daa-86d6-a5f996171b3c",
+    "fields": {
+      "filiere": "a230dcd7-7677-40a0-8415-95afeada6064",
+      "nom_diplome": "DUT Génie Électrique",
+      "etablissements": [],
+      "is_active": true
+    }
+  },
+  {
+    "model": "scoring.reglerejet",
+    "pk": "4b66deae-ad37-4f0b-80df-d6be4829f65a",
+    "fields": {
+      "filiere": "a230dcd7-7677-40a0-8415-95afeada6064",
+      "type_regle": "MOYENNE_INSUFFISANTE",
+      "is_active": true,
+      "message_rejet": "La moyenne générale est insuffisante.",
+      "parametre": {"seuil": 12.0}
+    }
+  },
+  {
+    "model": "scoring.reglerejet",
+    "pk": "f57a6624-302f-4b98-afad-3fbab1f45023",
+    "fields": {
+      "filiere": "a230dcd7-7677-40a0-8415-95afeada6064",
+      "type_regle": "NOTE_ELIMINATOIRE",
+      "is_active": true,
+      "message_rejet": "Une matière éliminatoire est en dessous du seuil.",
+      "parametre": {"matiere": "Mathématiques", "seuil": 8.0}
+    }
+  },
+  {
+    "model": "scoring.reglerejet",
+    "pk": "a527f059-5cdf-4452-ba1f-2a5dd541700f",
+    "fields": {
+      "filiere": "a230dcd7-7677-40a0-8415-95afeada6064",
+      "type_regle": "DOCUMENT_MANQUANT",
+      "is_active": true,
+      "message_rejet": "Un ou plusieurs documents obligatoires sont manquants.",
+      "parametre": {}
+    }
+  },
+  {
+    "model": "scoring.reglerejet",
+    "pk": "b78d6115-f8a6-4433-9bd8-33a34198816a",
+    "fields": {
+      "filiere": "a230dcd7-7677-40a0-8415-95afeada6064",
+      "type_regle": "DIPLOME_INVALIDE",
+      "is_active": true,
+      "message_rejet": "Le diplôme déclaré n'est pas accepté pour cette filière.",
+      "parametre": {}
+    }
+  },
+  {
+    "model": "scoring.reglerejet",
+    "pk": "5bf9aa86-fc65-40f4-82f0-de5d5d2f0369",
+    "fields": {
+      "filiere": "a230dcd7-7677-40a0-8415-95afeada6064",
+      "type_regle": "DOUBLON_CIN",
+      "is_active": true,
+      "message_rejet": "Un dossier existe déjà pour ce CIN dans la même filière.",
+      "parametre": {}
+    }
+  },
+  {
+    "model": "scoring.configscoring",
+    "pk": "f13522d4-a28f-4b0f-a279-cca288b779ed",
+    "fields": {
+      "filiere": "a230dcd7-7677-40a0-8415-95afeada6064",
+      "matiere": "Mathématiques",
+      "poids": "30.00",
+      "bonus_mention": {"TB": 2.0, "B": 1.0, "AB": 0.5, "P": 0.0}
+    }
+  },
+  {
+    "model": "scoring.configscoring",
+    "pk": "e200d989-794f-429c-8444-38fe036cb31f",
+    "fields": {
+      "filiere": "a230dcd7-7677-40a0-8415-95afeada6064",
+      "matiere": "Informatique",
+      "poids": "30.00",
+      "bonus_mention": {}
+    }
+  },
+  {
+    "model": "scoring.configscoring",
+    "pk": "efffe13c-2b07-4d8b-8808-f9709fc09652",
+    "fields": {
+      "filiere": "a230dcd7-7677-40a0-8415-95afeada6064",
+      "matiere": "Physique",
+      "poids": "20.00",
+      "bonus_mention": {}
+    }
+  },
+  {
+    "model": "scoring.configscoring",
+    "pk": "110a3f69-5163-4487-9697-fd1141a315df",
+    "fields": {
+      "filiere": "a230dcd7-7677-40a0-8415-95afeada6064",
+      "matiere": "Anglais",
+      "poids": "10.00",
+      "bonus_mention": {}
+    }
+  },
+  {
+    "model": "scoring.configscoring",
+    "pk": "013107a6-05cb-4e96-bccd-c9673c970397",
+    "fields": {
+      "filiere": "a230dcd7-7677-40a0-8415-95afeada6064",
+      "matiere": "Français",
+      "poids": "10.00",
+      "bonus_mention": {}
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": "4afe3e27-564b-42ba-9c55-f6c2068a3579",
+    "fields": {
+      "password": "pbkdf2_sha256$600000$vZiSRjgQT1zzyieeH5nKha$MrE0UyhbvTtJyjqbj4ams3M7aTRoFxo6fqzpGFtfG4Q=",
+      "last_login": null,
+      "is_superuser": true,
+      "email": "admin@ensa-bm.ma",
+      "cin": "AD000001",
+      "role": "ADMIN",
+      "is_active": true,
+      "is_staff": true,
+      "email_verified": true,
+      "created_at": "2026-05-21T08:00:00Z",
+      "updated_at": "2026-05-21T08:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": "a31906c4-e653-47cb-b959-b01c09380ea2",
+    "fields": {
+      "password": "pbkdf2_sha256$600000$uWLZ1uvN7aHfud2G8rSUlu$im+UeyI7LXD8HUKZpIjV0JIOVpLqWWAOaeGFil3Z2OA=",
+      "last_login": null,
+      "is_superuser": false,
+      "email": "scolarite@ensa-bm.ma",
+      "cin": "SC000001",
+      "role": "RESPONSABLE",
+      "is_active": true,
+      "is_staff": true,
+      "email_verified": true,
+      "created_at": "2026-05-21T08:00:00Z",
+      "updated_at": "2026-05-21T08:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": "2fb0fbd0-f47e-4eb2-9569-88fed16e7676",
+    "fields": {
+      "password": "pbkdf2_sha256$600000$rnTBgbQOf1T4Ew52X3ph8u$sSaoSred+97qVzTFsqPchRg0hutXkvSzZKS7P+zwWKk=",
+      "last_login": null,
+      "is_superuser": false,
+      "email": "ahmed.benali@gmail.com",
+      "cin": "AB123456",
+      "role": "CANDIDAT",
+      "is_active": true,
+      "is_staff": false,
+      "email_verified": false,
+      "created_at": "2026-05-21T08:00:00Z",
+      "updated_at": "2026-05-21T08:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": "30a0b713-2ff7-46b4-a425-19c0ffaa8021",
+    "fields": {
+      "password": "pbkdf2_sha256$600000$rnTBgbQOf1T4Ew52X3ph8u$sSaoSred+97qVzTFsqPchRg0hutXkvSzZKS7P+zwWKk=",
+      "last_login": null,
+      "is_superuser": false,
+      "email": "fatima.elhassani@gmail.com",
+      "cin": "CD789012",
+      "role": "CANDIDAT",
+      "is_active": true,
+      "is_staff": false,
+      "email_verified": false,
+      "created_at": "2026-05-21T08:00:00Z",
+      "updated_at": "2026-05-21T08:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.candidat",
+    "pk": "5459954b-acd3-43b8-81d3-c7059102371b",
+    "fields": {
+      "user": "2fb0fbd0-f47e-4eb2-9569-88fed16e7676",
+      "nom": "Benali",
+      "prenom": "Ahmed",
+      "telephone": "0612345678",
+      "adresse": "Beni Mellal",
+      "date_naissance": "2002-01-01",
+      "created_at": "2026-05-21T08:00:00Z"
+    }
+  },
+  {
+    "model": "users.candidat",
+    "pk": "549f1045-e09a-4296-b7e9-03917855d654",
+    "fields": {
+      "user": "30a0b713-2ff7-46b4-a425-19c0ffaa8021",
+      "nom": "El Hassani",
+      "prenom": "Fatima",
+      "telephone": "0623456789",
+      "adresse": "Beni Mellal",
+      "date_naissance": "2002-02-10",
+      "created_at": "2026-05-21T08:00:00Z"
+    }
+  }
+]
