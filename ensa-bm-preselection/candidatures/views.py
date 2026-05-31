@@ -124,21 +124,15 @@ class DossierViewSet(viewsets.ModelViewSet):
         from .services.verification_document import analyser_dossier_complet
         verification = analyser_dossier_complet(dossier)
 
-        # Si CRITIQUE → rejet automatique immédiat
+        # Si CRITIQUE → rejet automatique proposé (on le marque suspect)
         if verification['recommandation'] == 'REJETER':
             dossier.motif_rejet = (
                 "Documents non conformes — "
                 "Authenticité insuffisante. "
                 "Alertes : " + ", ".join(verification['alertes_critiques'])
             )
+            dossier.is_suspect = True
             dossier.save()
-            dossier.changer_statut(Dossier.Statut.REJETE_AUTO)
-            envoyer_notification(dossier, 'REJET_AUTO')
-            return Response({
-                'statut': 'REJETE_AUTO',
-                'motif': dossier.motif_rejet,
-                'score_authenticite': verification['score_global']
-            })
 
         # Si VERIF_MANUELLE → marquer suspect mais continuer
         if verification['recommandation'] == 'VERIF_MANUELLE':
@@ -154,9 +148,8 @@ class DossierViewSet(viewsets.ModelViewSet):
                 dossier.changer_statut(Dossier.Statut.INCOMPLET, commentaire=rejet['motif'])
                 envoyer_notification(dossier, 'INCOMPLET')
                 return Response({"statut": "INCOMPLET", "message": rejet['motif']})
-            dossier.changer_statut(Dossier.Statut.REJETE_AUTO, commentaire=rejet['motif'])
-            envoyer_notification(dossier, 'REJET_AUTO')
-            return Response({"statut": "REJETE_AUTO", "motif": rejet['motif']})
+            # Pour tout autre rejet (diplôme, moyenne, etc.), on ne rejette pas automatiquement.
+            # On stocke le motif de rejet dans dossier.motif_rejet et on continue le traitement.
 
         # Étape 4 — Statut final puis scoring
         if dossier.is_suspect:
@@ -204,6 +197,28 @@ class DossierViewSet(viewsets.ModelViewSet):
         )
         envoyer_notification(dossier, 'REJET_MANUEL')
         return Response({"message": "Dossier rejeté.", "statut": "REJETE_FINAL"})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsResponsableOrAdmin])
+    def rejeter_auto(self, request, pk=None):
+        from notifications.services import envoyer_notification
+        dossier = self.get_object()
+        if dossier.statut not in [Dossier.Statut.EN_ATTENTE, Dossier.Statut.SUSPECT]:
+            return Response({"error": "Action impossible pour ce statut."}, status=400)
+        
+        # Appliquer la décision de rejet automatique
+        if not dossier.motif_rejet:
+            dossier.motif_rejet = request.data.get('commentaire', 'Rejet automatique validé par le responsable.')
+        else:
+            if request.data.get('commentaire'):
+                dossier.motif_rejet += f" - {request.data.get('commentaire')}"
+        
+        dossier.changer_statut(
+            Dossier.Statut.REJETE_AUTO,
+            acteur=request.user,
+            commentaire=dossier.motif_rejet
+        )
+        envoyer_notification(dossier, 'REJET_AUTO')
+        return Response({"message": "Dossier rejeté automatiquement.", "statut": "REJETE_AUTO"})
 
     @action(detail=False, methods=['get'], permission_classes=[IsResponsableOrAdmin])
     def export(self, request):
@@ -278,6 +293,50 @@ class DossierViewSet(viewsets.ModelViewSet):
             commentaire='Vérification Massar confirmée manuellement'
         )
         return Response({'message': 'Dossier vérifié via Massar.'})
+
+    @action(detail=True, methods=['get'])
+    def convocation_ecrit(self, request, pk=None):
+        """
+        Génère et télécharge la convocation PDF pour l'épreuve écrite.
+        Disponible pour le candidat concerné ou le responsable si le dossier est PRESELECTIONNE ou ADMIS_FINAL.
+        """
+        from django.http import HttpResponse
+        from .services.invitation_pdf import generer_invitation_ecrit
+        
+        dossier = self.get_object()
+        
+        if dossier.statut not in [Dossier.Statut.PRESELECTIONNE, Dossier.Statut.ADMIS_FINAL]:
+            return Response(
+                {"error": "La convocation écrite est uniquement disponible pour les candidats présélectionnés ou admis à l'écrit."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        pdf_buffer = generer_invitation_ecrit(dossier)
+        response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="convocation_ecrit_{dossier.candidat.user.cin or dossier.id}.pdf"'
+        return response
+
+    @action(detail=True, methods=['get'])
+    def convocation_oral(self, request, pk=None):
+        """
+        Génère et télécharge la convocation PDF pour l'épreuve orale.
+        Disponible pour le candidat concerné ou le responsable si le dossier est ADMIS_FINAL.
+        """
+        from django.http import HttpResponse
+        from .services.invitation_pdf import generer_invitation_oral
+        
+        dossier = self.get_object()
+        
+        if dossier.statut != Dossier.Statut.ADMIS_FINAL:
+            return Response(
+                {"error": "La convocation orale est uniquement disponible pour les candidats admis à l'épreuve écrite."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        pdf_buffer = generer_invitation_oral(dossier)
+        response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="convocation_oral_{dossier.candidat.user.cin or dossier.id}.pdf"'
+        return response
 
 
 class DocumentUploadView(generics.CreateAPIView):

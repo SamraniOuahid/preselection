@@ -43,15 +43,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="ensa-auth-page animate-fade-in">
-      <h2 className="ensa-auth-title">Connexion à votre espace</h2>
-      <p className="ensa-auth-subtitle">Accédez à votre dossier de présélection</p>
+    <div className="w-full max-w-md mx-auto space-y-6 animate-fade-in">
+      <div>
+        <h2 className="text-2xl font-bold text-center text-text-primary font-display">Connexion à votre espace</h2>
+        <p className="text-center text-sm text-text-muted mt-1.5">Accédez à votre dossier de présélection</p>
+      </div>
 
       {serverError && (
-        <AlertBanner variant="error" className="mb-5">{serverError}</AlertBanner>
+        <AlertBanner variant="error">{serverError}</AlertBanner>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="ensa-auth-form">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="ensa-auth-field">
           <label className="label" htmlFor="login-email">Adresse email</label>
           <div className="ensa-input-icon-wrap">

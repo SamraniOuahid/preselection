@@ -4,20 +4,23 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, FolderOpen, FilePlus, User,
-  GraduationCap, Settings, X
+  GraduationCap, Settings, X, Bell, ClipboardCheck, FileCheck2
 } from 'lucide-react';
 
 const candidatLinks = [
-  { to: '/mes-dossiers',    icon: FolderOpen,     label: 'Mes Dossiers' },
-  { to: '/nouveau-dossier', icon: FilePlus,        label: 'Nouveau Dossier' },
-  { to: '/profil',          icon: User,            label: 'Mon Profil' },
+  { to: '/mes-dossiers',             icon: FolderOpen,      label: 'Mes Dossiers' },
+  { to: '/nouveau-dossier',          icon: FilePlus,        label: 'Nouveau Dossier' },
+  { to: '/candidat/resultats-ecrit', icon: FileCheck2,      label: 'Résultats Écrits' },
+  { to: '/candidat/notifications',   icon: Bell,            label: 'Mes Notifications' },
+  { to: '/profil',                   icon: User,            label: 'Mon Profil' },
 ];
 
 const staffLinks = [
-  { to: '/dashboard',       icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/dossiers',        icon: FolderOpen,      label: 'Dossiers' },
-  { to: '/filieres',        icon: GraduationCap,   label: 'Filières' },
-  { to: '/config-scoring',  icon: Settings,        label: 'Scoring & Règles' },
+  { to: '/dashboard',        icon: LayoutDashboard,  label: 'Dashboard' },
+  { to: '/dossiers',         icon: FolderOpen,       label: 'Dossiers' },
+  { to: '/admin/epreuves',   icon: ClipboardCheck,   label: 'Épreuves Écrites' },
+  { to: '/filieres',         icon: GraduationCap,    label: 'Filières' },
+  { to: '/config-scoring',   icon: Settings,         label: 'Scoring & Règles' },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -36,15 +39,16 @@ export default function Sidebar({ isOpen, onClose }) {
 
       <aside
         className={`
-          w-[260px] min-h-screen flex flex-col
-          fixed left-0 top-0 bottom-0 z-50
+          w-64 h-screen flex flex-col
+          fixed left-0 top-0 z-40
           transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          overflow-y-auto
         `}
         style={{ background: 'linear-gradient(180deg, #0D1F3C 0%, #142D52 100%)' }}
       >
         {/* Logo ENSA réel */}
-        <div className="px-5 py-5 border-b border-white/10 flex items-center justify-between">
+        <div className="p-6 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/ensa_logo.png" alt="ENSA BM" className="h-9 w-auto object-contain rounded-md" />
             <div>
@@ -78,7 +82,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 to={link.to}
                 onClick={onClose}
                 className={({ isActive }) => `
-                  flex items-center gap-3 px-3 py-2.5 rounded-lg
+                  flex items-center gap-3 px-4 py-3 rounded-lg
                   text-sm font-medium transition-all duration-200 no-underline
                   ${isActive
                     ? 'bg-white/12 text-white shadow-sm'
@@ -94,7 +98,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </nav>
 
         {/* Utilisateur connecté */}
-        <div className="px-5 py-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
               style={{ background: 'linear-gradient(135deg, #2E86C1, #5DADE2)' }}>

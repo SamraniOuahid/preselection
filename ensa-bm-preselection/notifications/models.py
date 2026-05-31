@@ -19,6 +19,8 @@ class Notification(models.Model):
         PRESELECTION  = 'PRESELECTION',  'Présélection'
         INCOMPLET     = 'INCOMPLET',     'Dossier incomplet'
         COMPLEMENT    = 'COMPLEMENT',    'Demande de complément'
+        ADMIS_FINAL   = 'ADMIS_FINAL',   'Admis définitivement'
+        RECALE_FINAL  = 'RECALE_FINAL',  'Recalé à l\'épreuve écrite'
 
     id           = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     destinataire = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
@@ -27,6 +29,8 @@ class Notification(models.Model):
     contenu_html = models.TextField()
     statut       = models.CharField(max_length=15, choices=Statut.choices, default=Statut.EN_ATTENTE)
     envoyee_le   = models.DateTimeField(null=True, blank=True)
+    lue          = models.BooleanField(default=False)
+    lue_le       = models.DateTimeField(null=True, blank=True)
     erreur       = models.TextField(blank=True)
     created_at   = models.DateTimeField(auto_now_add=True)
 

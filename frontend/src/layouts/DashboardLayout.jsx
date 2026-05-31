@@ -9,13 +9,13 @@ export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-surface">
+    <div className="flex h-screen overflow-hidden bg-surface">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex-1 flex flex-col ensa-main-content transition-[margin] duration-300">
+      <div className="flex-1 flex flex-col lg:ml-64 overflow-hidden transition-[margin] duration-300">
         <TopBar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
 
-        <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+        <main className="flex-1 overflow-auto w-full max-w-[1400px] mx-auto p-4 sm:p-6">
           <Outlet />
         </main>
       </div>

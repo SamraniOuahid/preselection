@@ -60,9 +60,11 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="ensa-auth-page animate-fade-in">
-      <h2 className="ensa-auth-title">Créer un compte</h2>
-      <p className="ensa-auth-subtitle">Inscription en 2 étapes simples</p>
+    <div className="w-full max-w-md mx-auto space-y-6 animate-fade-in">
+      <div>
+        <h2 className="text-2xl font-bold text-center text-text-primary font-display">Créer un compte</h2>
+        <p className="text-center text-sm text-text-muted mt-1.5">Inscription en 2 étapes simples</p>
+      </div>
 
       <div className="ensa-stepper">
         {[
@@ -93,10 +95,10 @@ export default function RegisterPage() {
       </div>
 
       {serverError && (
-        <AlertBanner variant="error" className="mb-5">{serverError}</AlertBanner>
+        <AlertBanner variant="error">{serverError}</AlertBanner>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="ensa-auth-form">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* ── Étape 1 : Compte ── */}
         {step === 1 && (
           <div className="flex flex-col gap-4 animate-fade-in">

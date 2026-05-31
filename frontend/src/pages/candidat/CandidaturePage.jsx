@@ -10,7 +10,8 @@ import ConfirmModal from '../../components/common/ConfirmModal';
 import AlertBanner from '../../components/common/AlertBanner';
 import {
   ChevronLeft, ChevronRight, Send, GraduationCap,
-  Users, Plus, Trash2, CheckCircle, Home, FolderOpen, FileText
+  Users, Plus, Trash2, CheckCircle, Home, FolderOpen, FileText,
+  Calendar, MapPin, Clock
 } from 'lucide-react';
 
 const STEPS = [
@@ -101,7 +102,7 @@ export default function CandidaturePage() {
   };
 
   return (
-    <div className="ensa-page ensa-page-narrow animate-fade-in">
+    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
       <nav className="ensa-breadcrumb mb-4">
         <Link to="/mes-dossiers" className="hover:text-primary-700 no-underline flex items-center gap-1"><Home size={14} /> Accueil</Link>
         <span>/</span>
@@ -110,32 +111,118 @@ export default function CandidaturePage() {
         <span className="text-text-primary font-medium">Candidature</span>
       </nav>
 
-      <div className="ensa-mb-6"><StepperBar steps={STEPS} currentStep={step} /></div>
+      <div><StepperBar steps={STEPS} currentStep={step} /></div>
 
-      {error && <AlertBanner variant="error" className="ensa-mb-5">{error}</AlertBanner>}
+      {error && <AlertBanner variant="error">{error}</AlertBanner>}
 
       {/* Étape 1 — Filière */}
       {step === 1 && (
         <div className="ensa-form-section animate-fade-in">
           <h2 className="ensa-section-title">Choix de la filière</h2>
           <p className="ensa-section-desc">Sélectionnez la filière souhaitée</p>
-          <div className="ensa-filiere-select">
-            {filieres.map((f) => (
-              <div key={f.id} onClick={() => setSelectedFiliere(f)}
-                className={`ensa-filiere-option ${selectedFiliere?.id === f.id ? 'is-selected' : ''}`}>
-                <div className="ensa-filiere-option-header">
-                  <div>
-                    <span className="ensa-dossier-code">{f.code}</span>
-                    <h3 className="ensa-filiere-option-meta ensa-text-primary ensa-font-semibold" style={{ marginTop: 8, display: 'block' }}>{f.nom}</h3>
-                    <div className="ensa-filiere-option-meta">
-                      <span className="badge badge-en_traitement">{formatNiveau(f.niveau)}</span>
-                      <span className="ensa-text-muted ensa-text-sm ensa-flex-center ensa-gap-2"><Users size={12} /> {f.places_disponibles || 30} places</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {filieres.map((f) => {
+              const ep = f.epreuve_info;
+              return (
+                <div key={f.id} onClick={() => setSelectedFiliere(f)}
+                  className={`ensa-filiere-option ${selectedFiliere?.id === f.id ? 'is-selected' : ''}`}>
+                  <div className="ensa-filiere-option-header">
+                    <div className="flex-1 min-w-0">
+                      <span className="ensa-dossier-code">{f.code}</span>
+                      <h3 className="ensa-filiere-option-meta ensa-text-primary ensa-font-semibold" style={{ marginTop: 8, display: 'block' }}>{f.nom}</h3>
+                      <div className="ensa-filiere-option-meta">
+                        <span className="badge badge-en_traitement">{formatNiveau(f.niveau)}</span>
+                        <span className="ensa-text-muted ensa-text-sm ensa-flex-center ensa-gap-2"><Users size={12} /> {f.places_disponibles || 30} places</span>
+                      </div>
                     </div>
+                    {selectedFiliere?.id === f.id && <CheckCircle size={20} className="text-primary-500 flex-shrink-0" />}
                   </div>
-                  {selectedFiliere?.id === f.id && <CheckCircle size={20} className="text-primary-500" />}
+
+                  {/* Dates d'épreuves */}
+                  {ep ? (
+                    <div style={{
+                      marginTop: '12px',
+                      padding: '10px 12px',
+                      background: 'linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%)',
+                      borderRadius: '10px',
+                      border: '1px solid #c7d7f9',
+                      fontSize: '12px',
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '8px',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#1B3A6B' }}>
+                        <Calendar size={13} style={{ flexShrink: 0, color: '#3B6FE5' }} />
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#3B6FE5' }}>Épreuve Écrite</div>
+                          <div style={{ fontWeight: 600 }}>{ep.date_ecrit || <span style={{ color: '#94a3b8' }}>Non définie</span>}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#1B3A6B' }}>
+                        <Calendar size={13} style={{ flexShrink: 0, color: '#7C3AED' }} />
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#7C3AED' }}>Épreuve Orale</div>
+                          <div style={{ fontWeight: 600 }}>{ep.date_oral || <span style={{ color: '#94a3b8' }}>Non définie</span>}</div>
+                        </div>
+                      </div>
+                      
+                      {/* Détails Écrit / Oral de la filière */}
+                      {(ep.heure_ecrit || ep.lieu_ecrit || ep.heure_oral || ep.lieu_oral) && (
+                        <div style={{ gridColumn: '1 / -1', borderTop: '1px dashed #c7d7f9', paddingTop: '8px', marginTop: '4px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: '#4b5563' }}>
+                          {/* Écrit details */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {ep.heure_ecrit && (
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Clock size={11} style={{ color: '#3B6FE5' }} />
+                                <strong>Heure écit :</strong> {ep.heure_ecrit}
+                              </span>
+                            )}
+                            {ep.lieu_ecrit && (
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <MapPin size={11} style={{ color: '#3B6FE5' }} />
+                                <strong>Lieu écrit :</strong> {ep.lieu_ecrit}
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Oral details */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {ep.heure_oral && (
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Clock size={11} style={{ color: '#7C3AED' }} />
+                                <strong>Heure oral :</strong> {ep.heure_oral}
+                              </span>
+                            )}
+                            {ep.lieu_oral && (
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <MapPin size={11} style={{ color: '#7C3AED' }} />
+                                <strong>Lieu oral :</strong> {ep.lieu_oral}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{
+                      marginTop: '10px',
+                      padding: '8px 12px',
+                      background: '#f8f9fa',
+                      borderRadius: '8px',
+                      border: '1px dashed #d1d5db',
+                      fontSize: '12px',
+                      color: '#9ca3af',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}>
+                      <Calendar size={12} />
+                      Dates d'épreuves non encore planifiées
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -145,7 +232,7 @@ export default function CandidaturePage() {
         <div className="ensa-form-section animate-fade-in">
           <h2 className="ensa-section-title">Informations académiques</h2>
           <p className="ensa-section-desc">Renseignez vos diplômes et résultats</p>
-          <div className="ensa-auth-form">
+          <div className="space-y-4">
             <div className="ensa-form-grid">
               <div>
                 <label className="label">Diplôme obtenu</label>
@@ -269,7 +356,7 @@ export default function CandidaturePage() {
       )}
 
       {/* Navigation */}
-      <div className="ensa-step-nav">
+      <div className="border-t border-border pt-6 mt-6 flex items-center justify-between">
         <button type="button" className="btn btn-outline" onClick={goPrev} disabled={step === 1}><ChevronLeft size={16} /> Précédent</button>
         {step < 5 ? (
           <button type="button" className="btn btn-primary" onClick={goNext}>Suivant <ChevronRight size={16} /></button>

@@ -1,6 +1,6 @@
 // src/components/common/FileDropZone.jsx
 // Zone de drop réutilisable avec états : vide, chargement, uploadé, erreur
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, CheckCircle, AlertCircle, X, FileText, Image } from 'lucide-react';
 
@@ -15,7 +15,6 @@ export default function FileDropZone({
   error: externalError,
   hint,
 }) {
-  const [uploading, setUploading] = useState(false);
 
   const onDrop = useCallback((acceptedFiles, rejectedFiles) => {
     if (rejectedFiles.length > 0) {

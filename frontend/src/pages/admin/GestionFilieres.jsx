@@ -5,8 +5,7 @@ import { useForm } from 'react-hook-form';
 import API from '../../api/axios';
 import EmptyState from '../../components/common/EmptyState';
 import { 
-  Plus, Edit2, Lock, Unlock, GraduationCap, Users, 
-  FolderOpen, Settings, AlertTriangle, FileText, CheckCircle
+  Plus, Edit2, Lock, Unlock, GraduationCap, Users, FolderOpen
 } from 'lucide-react';
 
 export default function GestionFilieres() {
@@ -39,6 +38,12 @@ export default function GestionFilieres() {
         niveau: data.niveau,
         description: data.description,
         places_disponibles: parseInt(data.places_disponibles),
+        date_ecrit: data.date_ecrit || null,
+        heure_ecrit: data.heure_ecrit || null,
+        lieu_ecrit: data.lieu_ecrit || null,
+        date_oral: data.date_oral || null,
+        heure_oral: data.heure_oral || null,
+        lieu_oral: data.lieu_oral || null,
         diplomes_acceptes,
       };
 
@@ -64,6 +69,12 @@ export default function GestionFilieres() {
     setValue('niveau', f.niveau);
     setValue('description', f.description);
     setValue('places_disponibles', f.places_disponibles);
+    setValue('date_ecrit', f.date_ecrit || '');
+    setValue('heure_ecrit', f.heure_ecrit || '');
+    setValue('lieu_ecrit', f.lieu_ecrit || '');
+    setValue('date_oral', f.date_oral || '');
+    setValue('heure_oral', f.heure_oral || '');
+    setValue('lieu_oral', f.lieu_oral || '');
     
     const diplomesStr = f.diplomes_acceptes?.map(da => da.nom_diplome).join(', ') || '';
     setValue('diplomes_str', diplomesStr);
@@ -74,6 +85,7 @@ export default function GestionFilieres() {
       await API.post(`/filieres/${id}/toggle_status/`);
       fetchFilieres();
     } catch (err) {
+      console.error("Erreur lors du toggle status:", err);
       alert("Erreur lors de la modification de l'état.");
     }
   };
@@ -86,6 +98,7 @@ export default function GestionFilieres() {
       });
       fetchFilieres();
     } catch (err) {
+      console.error("Erreur lors de l'ajout du diplôme:", err);
       alert("Erreur lors de l'ajout du diplôme.");
     }
   };
@@ -98,6 +111,7 @@ export default function GestionFilieres() {
       });
       fetchFilieres();
     } catch (err) {
+      console.error("Erreur lors du retrait du diplôme:", err);
       alert("Erreur lors du retrait du diplôme.");
     }
   };
@@ -188,6 +202,68 @@ export default function GestionFilieres() {
                 {...register('places_disponibles', { required: 'Obligatoire', min: 1 })} 
               />
             </div>
+            <div>
+              <label className="label" htmlFor="filiere-date-ecrit">Date de l'épreuve écrite</label>
+              <input 
+                id="filiere-date-ecrit"
+                type="date" 
+                className="input font-mono" 
+                {...register('date_ecrit')} 
+              />
+            </div>
+
+            <div>
+              <label className="label" htmlFor="filiere-heure-ecrit">Heure de l'épreuve écrite</label>
+              <input 
+                id="filiere-heure-ecrit"
+                type="text" 
+                className="input font-mono" 
+                placeholder="Ex: 09:00"
+                {...register('heure_ecrit')} 
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="label" htmlFor="filiere-lieu-ecrit">Lieu de l'épreuve écrite</label>
+              <input 
+                id="filiere-lieu-ecrit"
+                className="input" 
+                placeholder="Ex: Amphi A, Bâtiment Sciences, ENSA Béni Mellal" 
+                {...register('lieu_ecrit')} 
+              />
+            </div>
+
+            <div>
+              <label className="label" htmlFor="filiere-date-oral">Date de l'épreuve orale</label>
+              <input 
+                id="filiere-date-oral"
+                type="date" 
+                className="input font-mono" 
+                {...register('date_oral')} 
+              />
+            </div>
+
+            <div>
+              <label className="label" htmlFor="filiere-heure-oral">Heure de l'épreuve orale</label>
+              <input 
+                id="filiere-heure-oral"
+                type="text" 
+                className="input font-mono" 
+                placeholder="Ex: 09:00"
+                {...register('heure_oral')} 
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="label" htmlFor="filiere-lieu-oral">Lieu de l'épreuve orale</label>
+              <input 
+                id="filiere-lieu-oral"
+                className="input" 
+                placeholder="Ex: Salle de réunion, Bloc Administration, ENSA Béni Mellal" 
+                {...register('lieu_oral')} 
+              />
+            </div>
+
             <div className="sm:col-span-2">
               <label className="label" htmlFor="filiere-diplomes">Diplômes admis (séparés par des virgules)</label>
               <input 
@@ -266,6 +342,55 @@ export default function GestionFilieres() {
                       <span className="font-mono">{f.candidatures_count}</span> candidature{f.candidatures_count !== 1 ? 's' : ''}
                     </span>
                   </div>
+
+                  {/* Infos Concours Écrit */}
+                  {(f.date_ecrit || f.heure_ecrit || f.lieu_ecrit) && (
+                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs bg-blue-50/50 p-2.5 rounded-lg border border-blue-100/50 text-[#1B3A6B]">
+                      {f.date_ecrit && (
+                        <span className="flex items-center gap-1">
+                          <span className="font-bold text-[10px] uppercase tracking-wider text-[#3B6FE5]">Date écrit :</span>
+                          <span className="font-semibold">{new Date(f.date_ecrit).toLocaleDateString('fr-FR')}</span>
+                        </span>
+                      )}
+                      {f.heure_ecrit && (
+                        <span className="flex items-center gap-1">
+                          <span className="font-bold text-[10px] uppercase tracking-wider text-[#3B6FE5]">Heure :</span>
+                          <span className="font-semibold">{f.heure_ecrit}</span>
+                        </span>
+                      )}
+                      {f.lieu_ecrit && (
+                        <span className="flex items-center gap-1">
+                          <span className="font-bold text-[10px] uppercase tracking-wider text-[#3B6FE5]">Lieu :</span>
+                          <span className="font-semibold">{f.lieu_ecrit}</span>
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Infos Concours Oral */}
+                  {(f.date_oral || f.heure_oral || f.lieu_oral) && (
+                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-xs bg-purple-50/50 p-2.5 rounded-lg border border-purple-100/50 text-[#5B21B6]">
+                      {f.date_oral && (
+                        <span className="flex items-center gap-1">
+                          <span className="font-bold text-[10px] uppercase tracking-wider text-[#7C3AED]">Date oral :</span>
+                          <span className="font-semibold">{new Date(f.date_oral).toLocaleDateString('fr-FR')}</span>
+                        </span>
+                      )}
+                      {f.heure_oral && (
+                        <span className="flex items-center gap-1">
+                          <span className="font-bold text-[10px] uppercase tracking-wider text-[#7C3AED]">Heure :</span>
+                          <span className="font-semibold">{f.heure_oral}</span>
+                        </span>
+                      )}
+                      {f.lieu_oral && (
+                        <span className="flex items-center gap-1">
+                          <span className="font-bold text-[10px] uppercase tracking-wider text-[#7C3AED]">Lieu :</span>
+                          <span className="font-semibold">{f.lieu_oral}</span>
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  
                   
                   {/* Diplômes acceptés */}
                   <div className="mt-4 pt-3 border-t border-gray-100">

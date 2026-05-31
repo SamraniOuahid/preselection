@@ -15,6 +15,16 @@ class FluxCompletIntegrationTest(APITestCase):
     """Simule le parcours complet de A à Z : inscription → dépôt → soumission → scoring → décision."""
 
     def setUp(self):
+        self.patcher = patch("candidatures.services.verification_document.analyser_dossier_complet")
+        self.mock_verify = self.patcher.start()
+        self.mock_verify.return_value = {
+            'score_global': 1.0,
+            'niveau_confiance': 'ELEVE',
+            'par_document': {},
+            'alertes_critiques': [],
+            'recommandation': 'VALIDER'
+        }
+
         self.filiere = Filiere.objects.create(nom="Génie Informatique et Réseaux", code="GIR2", niveau="BAC2")
         DiplomaAccepte.objects.create(filiere=self.filiere, nom_diplome="DUT Informatique", etablissements=[], is_active=True)
         RegleRejet.objects.create(filiere=self.filiere, type_regle=RegleRejet.TypeRegle.DOCUMENT_MANQUANT, is_active=True, message_rejet="Documents manquants", parametre={})
@@ -24,6 +34,9 @@ class FluxCompletIntegrationTest(APITestCase):
         ConfigScoring.objects.create(filiere=self.filiere, matiere="Mathématiques", poids=50, bonus_mention={"TB": 2.0, "B": 1.0, "AB": 0.5, "P": 0.0})
         ConfigScoring.objects.create(filiere=self.filiere, matiere="Informatique", poids=50)
         self.resp = User.objects.create_user(email="resp@test.com", cin="RR123456", password="Test1234!", role=User.Role.RESPONSABLE)
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def _register(self, email, cin):
         res = self.client.post(
@@ -95,6 +108,10 @@ class FluxCompletIntegrationTest(APITestCase):
         dossier_id = self._create_dossier(token, diplome_obtenu="Licence Physique")
         self._upload_docs(token, dossier_id)
         res = self.client.post(f"/api/dossiers/{dossier_id}/soumettre/", **self._headers(token))
+        self.assertEqual(res.data["statut"], "EN_ATTENTE")
+
+        resp_token = self._login("resp@test.com")
+        res = self.client.post(f"/api/dossiers/{dossier_id}/rejeter_auto/", {}, format="json", **self._headers(resp_token))
         self.assertEqual(res.data["statut"], "REJETE_AUTO")
 
     @patch("notifications.services.envoyer_notification")
@@ -105,6 +122,10 @@ class FluxCompletIntegrationTest(APITestCase):
         dossier_id = self._create_dossier(token, moyenne_generale=10)
         self._upload_docs(token, dossier_id)
         res = self.client.post(f"/api/dossiers/{dossier_id}/soumettre/", **self._headers(token))
+        self.assertEqual(res.data["statut"], "EN_ATTENTE")
+
+        resp_token = self._login("resp@test.com")
+        res = self.client.post(f"/api/dossiers/{dossier_id}/rejeter_auto/", {}, format="json", **self._headers(resp_token))
         self.assertEqual(res.data["statut"], "REJETE_AUTO")
 
     @patch("notifications.services.envoyer_notification")

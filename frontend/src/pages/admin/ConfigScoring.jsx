@@ -6,8 +6,7 @@ import API from '../../api/axios';
 import EmptyState from '../../components/common/EmptyState';
 import AlertBanner from '../../components/common/AlertBanner';
 import {
-  Scale, ShieldAlert, Plus, Trash2, Play, Pause,
-  GraduationCap, Settings, AlertTriangle, CheckCircle2
+  Scale, ShieldAlert, Plus, Trash2, Play, Pause, GraduationCap
 } from 'lucide-react';
 
 export default function ConfigScoring() {
@@ -65,6 +64,7 @@ export default function ConfigScoring() {
       await API.delete(`/scoring/config/${id}/`);
       setConfigs(configs.filter((c) => c.id !== id));
     } catch (err) {
+      console.error("Erreur lors de la suppression:", err);
       alert('Erreur lors de la suppression.');
     }
   };
@@ -97,6 +97,7 @@ export default function ConfigScoring() {
       const { data: updated } = await API.get(`/scoring/regles/?filiere=${selectedFiliere}`);
       setRegles(updated.results || updated);
     } catch (err) {
+      console.error("Erreur toggleRegle:", err);
       alert("Erreur lors de la modification de l'état.");
     }
   };

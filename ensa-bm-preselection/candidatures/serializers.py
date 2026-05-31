@@ -34,6 +34,14 @@ class DossierListSerializer(serializers.ModelSerializer):
     candidat_email = serializers.EmailField(source='candidat.user.email', read_only=True)
     filiere_nom  = serializers.CharField(source='filiere.nom', read_only=True)
     filiere_code = serializers.CharField(source='filiere.code', read_only=True)
+    note_ecrite = serializers.SerializerMethodField()
+    note_sur = serializers.SerializerMethodField()
+    date_ecrit = serializers.SerializerMethodField()
+    date_oral = serializers.SerializerMethodField()
+    statut_epreuve = serializers.SerializerMethodField()
+    seuil_admission = serializers.SerializerMethodField()
+    lieu_oral = serializers.SerializerMethodField()
+    heure_oral = serializers.SerializerMethodField()
 
     class Meta:
         model  = Dossier
@@ -42,7 +50,42 @@ class DossierListSerializer(serializers.ModelSerializer):
             'filiere_nom', 'filiere_code',
             'statut', 'score', 'classement', 'is_suspect',
             'moyenne_generale', 'date_soumission', 'created_at',
+            'score_final', 'rang_final', 'note_ecrite', 'note_sur',
+            'date_ecrit', 'date_oral', 'statut_epreuve', 'seuil_admission',
+            'lieu_oral', 'heure_oral',
         ]
+
+    def get_note_ecrite(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return float(note_obj.note) if note_obj and note_obj.note is not None else None
+
+    def get_note_sur(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return float(note_obj.epreuve.note_sur) if note_obj else None
+
+    def get_date_ecrit(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return note_obj.epreuve.date_epreuve if note_obj else None
+
+    def get_date_oral(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return note_obj.epreuve.date_oral if note_obj else None
+
+    def get_statut_epreuve(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return note_obj.epreuve.statut if note_obj else None
+
+    def get_seuil_admission(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return float(note_obj.epreuve.seuil_admission) if note_obj else None
+
+    def get_lieu_oral(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return note_obj.epreuve.lieu_oral if note_obj else None
+
+    def get_heure_oral(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return note_obj.epreuve.heure_oral if note_obj else None
 
 
 class CandidatDetailSerializer(serializers.ModelSerializer):
@@ -66,6 +109,14 @@ class DossierDetailSerializer(serializers.ModelSerializer):
     filiere_nom  = serializers.CharField(source='filiere.nom', read_only=True)
     filiere_code = serializers.CharField(source='filiere.code', read_only=True)
     total_candidats = serializers.SerializerMethodField()
+    note_ecrite = serializers.SerializerMethodField()
+    note_sur = serializers.SerializerMethodField()
+    date_ecrit = serializers.SerializerMethodField()
+    date_oral = serializers.SerializerMethodField()
+    statut_epreuve = serializers.SerializerMethodField()
+    seuil_admission = serializers.SerializerMethodField()
+    lieu_oral = serializers.SerializerMethodField()
+    heure_oral = serializers.SerializerMethodField()
 
     class Meta:
         model  = Dossier
@@ -77,10 +128,45 @@ class DossierDetailSerializer(serializers.ModelSerializer):
             'score_confiance_ocr', 'is_suspect',
             'documents', 'notes',
             'date_soumission', 'created_at', 'updated_at', 'total_candidats',
+            'score_final', 'rang_final', 'note_ecrite', 'note_sur',
+            'date_ecrit', 'date_oral', 'statut_epreuve', 'seuil_admission',
+            'lieu_oral', 'heure_oral',
         ]
 
     def get_total_candidats(self, obj):
         return Dossier.objects.filter(filiere=obj.filiere).count()
+
+    def get_note_ecrite(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return float(note_obj.note) if note_obj and note_obj.note is not None else None
+
+    def get_note_sur(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return float(note_obj.epreuve.note_sur) if note_obj else None
+
+    def get_date_ecrit(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return note_obj.epreuve.date_epreuve if note_obj else None
+
+    def get_date_oral(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return note_obj.epreuve.date_oral if note_obj else None
+
+    def get_statut_epreuve(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return note_obj.epreuve.statut if note_obj else None
+
+    def get_seuil_admission(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return float(note_obj.epreuve.seuil_admission) if note_obj else None
+
+    def get_lieu_oral(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return note_obj.epreuve.lieu_oral if note_obj else None
+
+    def get_heure_oral(self, obj):
+        note_obj = obj.notes_ecrits.first()
+        return note_obj.epreuve.heure_oral if note_obj else None
 
 
 class DossierCreateUpdateSerializer(serializers.ModelSerializer):

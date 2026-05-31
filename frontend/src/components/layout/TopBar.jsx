@@ -2,7 +2,8 @@
 // Topbar du dashboard — style ENSA BM institutionnel
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { Menu, Bell, LogOut, Building2, User } from 'lucide-react';
+import { Menu, LogOut, Building2, User } from 'lucide-react';
+import ClochNotifications from '../notifications/ClochNotifications';
 
 export default function TopBar({ onMenuToggle, title }) {
   const { user, logout, isCandidat } = useAuth();
@@ -34,14 +35,6 @@ export default function TopBar({ onMenuToggle, title }) {
 
       {/* Droite */}
       <div className="flex items-center gap-3">
-        {/* Notifications */}
-        <button
-          className="p-2 rounded-md hover:bg-gray-100 text-text-muted transition-colors relative"
-          aria-label="Notifications"
-        >
-          <Bell size={18} />
-        </button>
-
         {/* Séparateur */}
         <div className="w-px h-8 bg-border hidden sm:block" />
 
@@ -66,6 +59,10 @@ export default function TopBar({ onMenuToggle, title }) {
               style={{ background: 'linear-gradient(135deg, #1B3A6B, #2E86C1)' }}>
               {user.profil ? user.profil.prenom[0] : user.email[0].toUpperCase()}
             </div>
+            
+            {/* Cloche de notifications */}
+            <ClochNotifications />
+
             <button
               onClick={handleLogout}
               className="btn btn-ghost btn-sm text-text-muted hover:text-danger-500"

@@ -10,6 +10,7 @@ import {
   ChevronLeft, ChevronRight, FolderOpen,
   Shield, ShieldAlert, ShieldCheck
 } from 'lucide-react';
+import BoutonNotifierTous from '../../components/notifications/BoutonNotifierTous';
 
 const STATUTS = [
   { value: '', label: 'Tous les statuts' },
@@ -89,21 +90,24 @@ export default function DossiersPage() {
   const paginatedData = dossiersFiltrés.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <div className="ensa-page animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       <div className="ensa-page-header">
         <div className="ensa-page-header-row">
           <div>
             <h1 className="ensa-page-title">Gestion des Dossiers</h1>
             <p className="ensa-page-subtitle">{dossiersFiltrés.length} dossier{dossiersFiltrés.length !== 1 ? 's' : ''}</p>
           </div>
-          <button onClick={handleExport} className="btn btn-outline btn-sm" disabled={exporting}>
-            <Download size={14} /> {exporting ? 'Export...' : 'Exporter Excel'}
-          </button>
+          <div className="flex items-center gap-3">
+            <BoutonNotifierTous variant="outline" onSuccess={fetchDossiers} />
+            <button onClick={handleExport} className="btn btn-outline btn-sm" disabled={exporting}>
+              <Download size={14} /> {exporting ? 'Export...' : 'Exporter Excel'}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Barre de filtres */}
-      <div className="ensa-card" style={{ padding: '16px', marginBottom: '20px', position: 'sticky', top: '64px', zIndex: 20 }}>
+      <div className="bg-white rounded-lg border border-border p-4 sticky top-16 z-20 shadow-sm">
         <div className="flex flex-wrap gap-3 items-center">
           <form onSubmit={handleSearch} className="flex-1 min-w-[200px] relative">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
@@ -143,8 +147,8 @@ export default function DossiersPage() {
         <EmptyState title="Aucun dossier trouvé" description="Essayez de modifier vos filtres de recherche." icon={FolderOpen} />
       ) : (
         <>
-          <div className="ensa-card">
-            <div className="ensa-table-wrap" style={{ border: 'none', borderRadius: 0 }}>
+          <div className="ensa-card overflow-x-auto">
+            <div className="ensa-table-wrap min-w-[1000px]" style={{ border: 'none', borderRadius: 0 }}>
               <table className="table">
                 <thead>
                   <tr>

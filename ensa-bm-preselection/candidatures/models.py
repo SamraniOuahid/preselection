@@ -23,6 +23,9 @@ class Dossier(models.Model):
         EN_ATTENTE     = 'EN_ATTENTE',     'En attente de décision'
         PRESELECTIONNE = 'PRESELECTIONNE', 'Présélectionné'
         REJETE_FINAL   = 'REJETE_FINAL',   'Rejeté (décision finale)'
+        ADMIS_FINAL    = 'ADMIS_FINAL',    'Admis définitivement'
+        RECALE_FINAL   = 'RECALE_FINAL',   'Recalé à l\'épreuve écrite'
+        ABSENT_ECRIT   = 'ABSENT_ECRIT',   'Absent à l\'épreuve écrite'
 
     class Mention(models.TextChoices):
         TRES_BIEN  = 'TB', 'Très Bien'
@@ -45,6 +48,13 @@ class Dossier(models.Model):
 
     # Calculé automatiquement par le moteur de scoring
     score               = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    # Score final combiné dossier + épreuve écrite
+    score_final         = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True,
+        help_text="Score final combiné dossier + épreuve écrite"
+    )
+    rang_final          = models.PositiveIntegerField(null=True, blank=True)
     classement          = models.PositiveIntegerField(null=True, blank=True)
 
     # Identifiants Massar / CNE
@@ -94,6 +104,9 @@ class Dossier(models.Model):
             self.Statut.REJETE_AUTO: HistoriqueAction.TypeAction.REJET_AUTO,
             self.Statut.PRESELECTIONNE: HistoriqueAction.TypeAction.PRESELECTION,
             self.Statut.REJETE_FINAL: HistoriqueAction.TypeAction.REJET_MANUEL,
+            self.Statut.ADMIS_FINAL: HistoriqueAction.TypeAction.VALIDATION,
+            self.Statut.RECALE_FINAL: HistoriqueAction.TypeAction.REJET_MANUEL,
+            self.Statut.ABSENT_ECRIT: HistoriqueAction.TypeAction.MODIFICATION,
         }
         ancien = self.statut
         self.statut = nouveau_statut

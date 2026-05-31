@@ -13,6 +13,16 @@ from users.models import Candidat, User
 
 class DossierAPITest(APITestCase):
     def setUp(self):
+        self.patcher = patch("candidatures.services.verification_document.analyser_dossier_complet")
+        self.mock_verify = self.patcher.start()
+        self.mock_verify.return_value = {
+            'score_global': 1.0,
+            'niveau_confiance': 'ELEVE',
+            'par_document': {},
+            'alertes_critiques': [],
+            'recommandation': 'VALIDER'
+        }
+
         self.filiere = Filiere.objects.create(nom="Génie Informatique et Réseaux", code="GIR2", niveau="BAC2")
         DiplomaAccepte.objects.create(filiere=self.filiere, nom_diplome="DUT Informatique", etablissements=[], is_active=True)
         RegleRejet.objects.create(
@@ -50,6 +60,9 @@ class DossierAPITest(APITestCase):
         self.user = User.objects.create_user(email="cand@test.com", cin="AB123456", password="Test1234!")
         self.candidat = Candidat.objects.create(user=self.user, nom="Benali", prenom="Ahmed")
         self.resp_user = User.objects.create_user(email="resp@test.com", cin="RR123456", password="Test1234!", role=User.Role.RESPONSABLE)
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def _token(self, user, password="Test1234!"):
         res = self.client.post("/api/auth/login/", {"email": user.email, "password": password}, format="json")
@@ -112,7 +125,17 @@ class DossierAPITest(APITestCase):
         dossier = Dossier.objects.get(id=dossier_id)
         self._add_documents(dossier)
         res = self.client.post(f"/api/dossiers/{dossier_id}/soumettre/", **self._auth_headers(self.user))
-        self.assertEqual(res.data["statut"], "REJETE_AUTO")
+        self.assertEqual(res.data["statut"], "EN_ATTENTE")
+        dossier.refresh_from_db()
+        self.assertTrue(len(dossier.motif_rejet) > 0)
+
+    def test_responsable_peut_rejeter_auto(self):
+        dossier = Dossier.objects.create(candidat=self.candidat, filiere=self.filiere, diplome_obtenu="DUT Informatique", etablissement_origine="EST", annee_obtention=2022, moyenne_generale=14, statut=Dossier.Statut.EN_ATTENTE, motif_rejet="Diplôme non accepté")
+        res = self.client.post(f"/api/dossiers/{dossier.id}/rejeter_auto/", {"commentaire": "Confirmation rejet"}, format="json", **self._auth_headers(self.resp_user))
+        dossier.refresh_from_db()
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(dossier.statut, Dossier.Statut.REJETE_AUTO)
+        self.assertIn("Confirmation rejet", dossier.motif_rejet)
 
     @patch("notifications.services.envoyer_notification")
     @patch("candidatures.services.extraction.extraire_donnees_dossier")
@@ -153,3 +176,17 @@ class DossierAPITest(APITestCase):
         res = self.client.get("/api/dossiers/export/", **self._auth_headers(self.resp_user))
         self.assertEqual(res.status_code, 200)
         self.assertIn("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", res["Content-Type"])
+
+    def test_convocation_ecrit_pdf(self):
+        dossier = Dossier.objects.create(candidat=self.candidat, filiere=self.filiere, diplome_obtenu="DUT Informatique", etablissement_origine="EST", annee_obtention=2022, moyenne_generale=14, statut=Dossier.Statut.PRESELECTIONNE)
+        res = self.client.get(f"/api/dossiers/{dossier.id}/convocation_ecrit/", **self._auth_headers(self.user))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res["Content-Type"], "application/pdf")
+        self.assertTrue(len(res.content) > 0)
+
+    def test_convocation_oral_pdf(self):
+        dossier = Dossier.objects.create(candidat=self.candidat, filiere=self.filiere, diplome_obtenu="DUT Informatique", etablissement_origine="EST", annee_obtention=2022, moyenne_generale=14, statut=Dossier.Statut.ADMIS_FINAL)
+        res = self.client.get(f"/api/dossiers/{dossier.id}/convocation_oral/", **self._auth_headers(self.user))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res["Content-Type"], "application/pdf")
+        self.assertTrue(len(res.content) > 0)

@@ -5,7 +5,8 @@ import { Link } from 'react-router-dom';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import API from '../../api/axios';
 import StatusBadge from '../../components/common/StatusBadge';
-import { Users, Clock, CheckCircle, XCircle, AlertTriangle, ArrowRight, TrendingUp, ShieldAlert, ShieldCheck } from 'lucide-react';
+import BoutonNotifierTous from '../../components/notifications/BoutonNotifierTous';
+import { Users, Clock, CheckCircle, XCircle, AlertTriangle, ArrowRight, TrendingUp, ShieldAlert } from 'lucide-react';
 
 const COLORS_STATUT = {
   BROUILLON: '#95A5A6',
@@ -100,21 +101,24 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="ensa-page animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       <div className="ensa-page-header">
         <div className="ensa-page-header-row">
           <div>
             <h1 className="ensa-page-title">Dashboard</h1>
             <p className="ensa-page-subtitle">Vue d'ensemble de la présélection</p>
           </div>
-          <Link to="/dossiers" className="btn btn-primary btn-sm">
-            <TrendingUp size={16} /> Voir tous les dossiers
-          </Link>
+          <div className="flex items-center gap-3">
+            <BoutonNotifierTous />
+            <Link to="/dossiers" className="btn btn-primary btn-sm">
+              <TrendingUp size={16} /> Voir tous les dossiers
+            </Link>
+          </div>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="ensa-kpi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpis.map((kpi) => {
           const { Icon } = kpi;
           const CardWrapper = kpi.link ? Link : 'div';
@@ -169,8 +173,8 @@ export default function DashboardPage() {
       )}
 
       {/* Graphiques */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 mb-6">
-        <div className="ensa-card lg:col-span-3">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="ensa-card lg:col-span-2">
           <div className="ensa-card-header">
             <h3 className="ensa-card-title">Candidatures par filière</h3>
           </div>
@@ -191,7 +195,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="ensa-card lg:col-span-2">
+        <div className="ensa-card lg:col-span-1">
           <div className="ensa-card-header">
             <h3 className="ensa-card-title">Répartition par statut</h3>
           </div>
@@ -208,7 +212,7 @@ export default function DashboardPage() {
                     outerRadius={85}
                     innerRadius={45}
                     labelLine={false}
-                    label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                   >
                     {pieData.map((entry, i) => (
                       <Cell key={i} fill={entry.color} />

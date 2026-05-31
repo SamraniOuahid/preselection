@@ -10,6 +10,7 @@ if DEBUG:
     ALLOWED_HOSTS += ['testserver', '127.0.0.1']
 
 INSTALLED_APPS = [
+    'daphne',  # ASGI server — doit être AVANT staticfiles
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -22,6 +23,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
+    'channels',
     # Local apps
     'users',
     'candidatures',
@@ -56,7 +58,7 @@ TEMPLATES = [{
     },
 }]
 
-WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
 
 # ── Base de données PostgreSQL ──────────────────────────────────────
 # DATABASES = {
@@ -120,11 +122,59 @@ EMAIL_PORT        = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS     = True
 EMAIL_HOST_USER   = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = 'ENSA BM Présélection <noreply@ensa-bm.ma>'
+DEFAULT_FROM_EMAIL = f"ENSA BM Présélection <{config('EMAIL_HOST_USER', default='lshdkds@gmail.com')}>"
 
 LANGUAGE_CODE = 'fr-fr'
 TIME_ZONE     = 'Africa/Casablanca'
 USE_I18N      = True
 USE_TZ        = True
 STATIC_URL    = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ── Django Channels — WebSocket avec Redis ──────────────────────────
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [(
+                config('REDIS_HOST', default='127.0.0.1'),
+                config('REDIS_PORT', default=6379, cast=int)
+            )],
+        },
+    },
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class':     'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'notifications': {
+            'handlers':  ['console'],
+            'level':     'DEBUG',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers':  ['console'],
+            'level':     'ERROR',
+            'propagate': False,
+        },
+        'channels': {
+            'handlers':  ['console'],
+            'level':     'DEBUG',
+            'propagate': True,
+        },
+    },
+}

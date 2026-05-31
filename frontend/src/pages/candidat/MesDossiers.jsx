@@ -31,7 +31,7 @@ export default function MesDossiers() {
   }
 
   return (
-    <div className="ensa-page animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="ensa-page-header">
         <div className="ensa-page-header-row">

@@ -9,8 +9,9 @@ import AlertBanner from '../../components/common/AlertBanner';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import {
   ArrowLeft, Trophy, Hash, FileText, GraduationCap,
-  CheckCircle, AlertTriangle, Upload, Mail, User, Pencil
+  CheckCircle, AlertTriangle, Upload, Mail, User, Pencil, Download
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const EDITABLE_STATUTS = ['BROUILLON', 'INCOMPLET'];
 
@@ -38,6 +39,44 @@ export default function SuiviDossierPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  const handleDownloadConvocationEcrit = async () => {
+    try {
+      const response = await API.get(`/dossiers/${id}/convocation_ecrit/`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `convocation_ecrit_ENSA_BM_${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Convocation écrite téléchargée avec succès !');
+    } catch (err) {
+      toast.error('Erreur lors du téléchargement de la convocation.');
+    }
+  };
+
+  const handleDownloadConvocationOral = async () => {
+    try {
+      const response = await API.get(`/dossiers/${id}/convocation_oral/`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `convocation_oral_ENSA_BM_${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Convocation orale téléchargée avec succès !');
+    } catch (err) {
+      toast.error('Erreur lors du téléchargement de la convocation.');
+    }
+  };
+
   if (loading) return <LoadingSpinner size="lg" text="Chargement du dossier..." className="py-20" />;
 
   if (!dossier) {
@@ -54,7 +93,7 @@ export default function SuiviDossierPage() {
   }
 
   return (
-    <div className="ensa-page ensa-page-narrow animate-fade-in">
+    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
       <div className="ensa-page-header">
         <nav className="ensa-breadcrumb">
           <Link to="/mes-dossiers"><ArrowLeft size={14} /> Mes dossiers</Link>
@@ -70,7 +109,7 @@ export default function SuiviDossierPage() {
               {dossier.filiere_code} — Soumis le {dossier.date_soumission ? new Date(dossier.date_soumission).toLocaleDateString('fr-FR') : 'N/A'}
             </p>
           </div>
-          <div className="ensa-flex ensa-gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap">
             <Link to="/profil" className="btn btn-outline btn-sm">
               <User size={14} /> Mon profil
             </Link>
@@ -85,14 +124,60 @@ export default function SuiviDossierPage() {
       </div>
 
       {!EDITABLE_STATUTS.includes(dossier.statut) && (
-        <AlertBanner variant="info" className="ensa-mb-5">
+        <AlertBanner variant="info">
           Ce dossier est en lecture seule. Pour modifier vos coordonnées personnelles, utilisez{' '}
           <Link to="/profil" className="ensa-link">Mon profil</Link>.
         </AlertBanner>
       )}
 
+      {dossier.statut === 'PRESELECTIONNE' && (
+        <AlertBanner variant="success" title="Présélection">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex-1">
+              <p className="font-semibold text-success-800">🎉 Félicitations ! Vous êtes présélectionné(e) pour passer l'épreuve écrite.</p>
+              <p className="text-sm text-success-700 mt-1">Vous pouvez dès à présent télécharger votre convocation officielle.</p>
+            </div>
+            <button
+              onClick={handleDownloadConvocationEcrit}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-success-600 hover:bg-success-700 rounded-lg transition-colors shadow-sm cursor-pointer"
+            >
+              <Download size={14} /> Télécharger ma convocation (PDF)
+            </button>
+          </div>
+        </AlertBanner>
+      )}
+
+      {dossier.statut === 'ADMIS_FINAL' && (
+        <AlertBanner variant="success" title="Admission Écrit">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex-1">
+              <p className="font-semibold text-success-800">🎉 Félicitations ! Vous êtes admis(e) à l'épreuve écrite.</p>
+              <p className="text-sm text-success-700 mt-1">Vous êtes convoqué(e) à passer l'épreuve orale d'admission.</p>
+            </div>
+            <button
+              onClick={handleDownloadConvocationOral}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-success-600 hover:bg-success-700 rounded-lg transition-colors shadow-sm cursor-pointer"
+            >
+              <Download size={14} /> Télécharger ma convocation orale (PDF)
+            </button>
+          </div>
+        </AlertBanner>
+      )}
+
+      {(dossier.statut === 'REJETE_AUTO' || dossier.statut === 'REJETE_FINAL') && (
+        <AlertBanner variant="error" title="Candidature non retenue">
+          Votre dossier n'a pas été retenu. Consultez le motif ci-dessous pour plus d'informations.
+        </AlertBanner>
+      )}
+
+      {dossier.statut === 'INCOMPLET' && (
+        <AlertBanner variant="warning" title="Dossier incomplet">
+          ⚠️ Votre dossier est incomplet. Veuillez compléter les documents manquants.
+        </AlertBanner>
+      )}
+
       {/* Carte statut principale */}
-      <div className="ensa-card mb-5">
+      <div className="ensa-card">
         <div className="ensa-card-body">
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
           {/* Score jauge */}
@@ -129,7 +214,7 @@ export default function SuiviDossierPage() {
 
       {/* Motif de rejet */}
       {dossier.motif_rejet && (
-        <AlertBanner variant="error" title="Motif de rejet" className="mb-5">
+        <AlertBanner variant="error" title="Motif de rejet">
           {dossier.motif_rejet}
           <div className="mt-2">
             <a href="mailto:scolarite@ensabm.ac.ma" className="inline-flex items-center gap-1 text-xs font-medium underline">
@@ -140,7 +225,7 @@ export default function SuiviDossierPage() {
       )}
 
       {/* Informations académiques */}
-      <div className="ensa-card mb-5">
+      <div className="ensa-card">
         <div className="ensa-card-body">
         <h3 className="text-sm font-semibold text-text-secondary mb-4 flex items-center gap-2">
           <GraduationCap size={16} /> Informations académiques
@@ -157,7 +242,7 @@ export default function SuiviDossierPage() {
 
       {/* Notes */}
       {dossier.notes?.length > 0 && (
-        <div className="ensa-card mb-5">
+        <div className="ensa-card">
           <div className="ensa-card-body" style={{ paddingBottom: 0 }}>
             <h3 className="text-sm font-semibold text-text-secondary mb-4 flex items-center gap-2">
               <FileText size={16} /> Notes déclarées

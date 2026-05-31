@@ -90,9 +90,15 @@ export default function DetailDossierPage() {
                 {actionLoading === 'valider' ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <CheckCircle size={14} />}
                 Présélectionner
               </button>
+              {dossier.motif_rejet && (
+                <button className="btn btn-danger btn-sm" onClick={() => handleAction('rejeter_auto')} disabled={!!actionLoading}>
+                  {actionLoading === 'rejeter_auto' ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <XCircle size={14} />}
+                  Confirmer le rejet (auto)
+                </button>
+              )}
               <button className="btn btn-outline-danger btn-sm" onClick={() => handleAction('rejeter')} disabled={!!actionLoading}>
                 {actionLoading === 'rejeter' ? <span className="w-4 h-4 border-2 border-danger-300 border-t-danger-600 rounded-full animate-spin" /> : <XCircle size={14} />}
-                Rejeter
+                Rejeter {dossier.motif_rejet ? '(manuel)' : ''}
               </button>
             </div>
           )}
@@ -105,13 +111,19 @@ export default function DetailDossierPage() {
           ⚠ Ce dossier a été marqué comme suspect par le système de vérification automatique. Une vérification manuelle est recommandée avant toute décision.
         </AlertBanner>
       )}
-      {dossier.motif_rejet && (
+      {['EN_ATTENTE', 'SUSPECT'].includes(dossier.statut) && dossier.motif_rejet && (
+        <AlertBanner variant="warning" title="Rejet automatique recommandé par le système" className="mb-5">
+          ⚠ Ce dossier ne remplit pas les critères d'éligibilité et est proposé pour rejet automatique.
+          <div className="mt-1 font-semibold">Motif détecté : {dossier.motif_rejet}</div>
+        </AlertBanner>
+      )}
+      {!['EN_ATTENTE', 'SUSPECT'].includes(dossier.statut) && dossier.motif_rejet && (
         <AlertBanner variant="error" title="Motif de rejet" className="mb-5">{dossier.motif_rejet}</AlertBanner>
       )}
 
-      <div className="ensa-detail-grid" style={{ gridTemplateColumns: '3fr 4fr 3fr' }}>
-        {/* Colonne gauche — Infos candidat (30%) */}
-        <div className="ensa-detail-col">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Colonne gauche — Infos candidat (3/12 = 25%) */}
+        <div className="lg:col-span-3 flex flex-col gap-6">
           {/* Photo placeholder + infos */}
           <div className="card p-5">
             <div className="flex flex-col items-center mb-4">
@@ -153,8 +165,8 @@ export default function DetailDossierPage() {
           </div>
         </div>
 
-        {/* Colonne centrale — Notes, Vérification et Documents (40%) */}
-        <div className="ensa-detail-col">
+        {/* Colonne centrale — Notes, Vérification et Documents (5/12 = 41.7%) */}
+        <div className="lg:col-span-5 flex flex-col gap-6">
           {/* Onglets */}
           <div className="flex border-b border-border mb-0 overflow-x-auto">
             {[
@@ -290,8 +302,8 @@ export default function DetailDossierPage() {
           )}
         </div>
 
-        {/* Colonne droite — Actions (30%) */}
-        <div className="ensa-detail-col">
+        {/* Colonne droite — Actions (4/12 = 33.3%) */}
+        <div className="lg:col-span-4 flex flex-col gap-6">
           {/* Scores rapides */}
           <div className="card p-4">
             <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-3">Métriques</h3>
@@ -321,7 +333,7 @@ export default function DetailDossierPage() {
                 <textarea
                   className="input"
                   rows={3}
-                  placeholder="Commentaire (obligatoire pour le rejet)..."
+                  placeholder={dossier.motif_rejet ? "Commentaire facultatif pour rejet auto / obligatoire pour rejet manuel..." : "Commentaire (obligatoire pour le rejet)..."}
                   value={commentaire}
                   onChange={(e) => setCommentaire(e.target.value)}
                   style={{ resize: 'vertical' }}
@@ -331,8 +343,13 @@ export default function DetailDossierPage() {
                 <button className="btn btn-success btn-sm w-full" onClick={() => handleAction('valider')} disabled={!!actionLoading}>
                   <CheckCircle size={14} /> Présélectionner
                 </button>
+                {dossier.motif_rejet && (
+                  <button className="btn btn-danger btn-sm w-full" onClick={() => handleAction('rejeter_auto')} disabled={!!actionLoading}>
+                    <XCircle size={14} /> Confirmer le rejet automatique
+                  </button>
+                )}
                 <button className="btn btn-outline-danger btn-sm w-full" onClick={() => handleAction('rejeter')} disabled={!!actionLoading}>
-                  <XCircle size={14} /> Rejeter
+                  <XCircle size={14} /> Rejeter {dossier.motif_rejet ? 'manuellement' : ''}
                 </button>
               </div>
             </div>

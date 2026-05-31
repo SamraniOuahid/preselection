@@ -6,8 +6,7 @@ import {
   UserPlus, FileText, Upload, Cpu, Award, Calendar,
   ChevronRight, ChevronLeft, ChevronDown, GraduationCap, Users,
   FileCheck, Camera, CreditCard, BookOpen, ArrowRight,
-  Shield, Clock, Zap, CheckCircle2, Sparkles, Building2,
-  ClipboardList, HelpCircle, BarChart3, Newspaper
+  CheckCircle2, Sparkles, ClipboardList, HelpCircle
 } from 'lucide-react';
 
 /* ── Hook : intersection observer ── */
@@ -22,7 +21,7 @@ function useInView(opts = {}) {
     }, { threshold: 0.15, ...opts });
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return [ref, inView];
 }
 
@@ -254,13 +253,8 @@ function ProcessSection() {
   );
 }
 
-/* ── Section Filières ── */
-function FilieresSection() {
-  const [ref, inView] = useInView();
-  const bac2 = FILIERES.filter(f => f.niveau === 'Bac+2');
-  const bac3 = FILIERES.filter(f => f.niveau === 'Bac+3');
-
-  const FiliereColumn = ({ title, icon, data, accent }) => (
+function FiliereColumn({ title, icon, data, accent }) {
+  return (
     <div className="ensa-filiere-col">
       <div className="ensa-filiere-col-header" style={{ '--col-accent': accent }}>
         <div className="ensa-filiere-col-icon">{icon}</div>
@@ -294,6 +288,13 @@ function FilieresSection() {
       </div>
     </div>
   );
+}
+
+/* ── Section Filières ── */
+function FilieresSection() {
+  const [ref, inView] = useInView();
+  const bac2 = FILIERES.filter(f => f.niveau === 'Bac+2');
+  const bac3 = FILIERES.filter(f => f.niveau === 'Bac+3');
 
   return (
     <section id="filieres" className="ensa-section ensa-section-gray">
@@ -343,6 +344,16 @@ function AnnoncesSection() {
   );
 }
 
+function StatItem({ value, suffix, label, inView }) {
+  const count = useCounter(value, 2000, inView);
+  return (
+    <div className="ensa-stat-item">
+      <div className="ensa-stat-number">{count}{suffix}</div>
+      <div className="ensa-stat-label">{label}</div>
+    </div>
+  );
+}
+
 /* ── Section Statistiques ── */
 function StatsSection() {
   const [ref, inView] = useInView();
@@ -356,15 +367,9 @@ function StatsSection() {
     <section className="ensa-stats" ref={ref}>
       <div className="ensa-stats-overlay" />
       <div className="ensa-container ensa-stats-inner">
-        {stats.map((s, i) => {
-          const count = useCounter(s.value, 2000, inView);
-          return (
-            <div key={i} className="ensa-stat-item">
-              <div className="ensa-stat-number">{count}{s.suffix}</div>
-              <div className="ensa-stat-label">{s.label}</div>
-            </div>
-          );
-        })}
+        {stats.map((s, i) => (
+          <StatItem key={i} value={s.value} suffix={s.suffix} label={s.label} inView={inView} />
+        ))}
       </div>
     </section>
   );

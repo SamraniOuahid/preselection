@@ -13,7 +13,6 @@ export default function RapportVerificationPanel({ dossierId, dossier, onUpdate 
   const [rapport, setRapport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const fetchRapport = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -21,6 +20,7 @@ export default function RapportVerificationPanel({ dossierId, dossier, onUpdate 
       const data = await getRapportVerification(dossierId);
       setRapport(data);
     } catch (err) {
+      console.error("Erreur de chargement du rapport:", err);
       setError("Impossible de charger le rapport de vérification automatique.");
     } finally {
       setLoading(false);
@@ -41,8 +41,8 @@ export default function RapportVerificationPanel({ dossierId, dossier, onUpdate 
 
   const getRecommandation = (score, isSuspect) => {
     if (score < 0.40) return 'REJETER';
-    if (score >= 0.80) return 'VALIDER';
-    return 'VERIF_MANUELLE';
+    if (isSuspect || score < 0.80) return 'VERIF_MANUELLE';
+    return 'VALIDER';
   };
 
   if (loading) {
