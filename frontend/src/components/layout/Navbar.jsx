@@ -101,10 +101,6 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="ensa-logo">
             <img src="/ensa_logo.png" alt="ENSA Béni Mellal" className="ensa-logo-img" />
-            <div className="ensa-logo-text">
-              <span className="ensa-logo-name">ENSA Béni Mellal</span>
-              <span className="ensa-logo-sub">Portail de Présélection</span>
-            </div>
           </Link>
 
           {/* Navigation desktop */}

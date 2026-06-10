@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Dossier, Document, NoteMatiere
+from .models import Dossier, Document, NoteSemestre
 
 
 class DocumentInline(admin.TabularInline):
@@ -12,25 +12,24 @@ class DocumentInline(admin.TabularInline):
     readonly_fields = ['taille_ko', 'qualite_ocr']
 
 
-class NoteMatiereInline(admin.TabularInline):
-    model   = NoteMatiere
+class NoteSemestreInline(admin.TabularInline):
+    model   = NoteSemestre
     extra   = 0
-    fields  = ['matiere', 'note_declaree', 'note_extraite', 'ecart', 'is_suspect']
-    readonly_fields = ['note_extraite', 'ecart', 'is_suspect']
+    fields  = ['semestre', 'moyenne', 'session', 'mention']
 
 
 @admin.register(Dossier)
 class DossierAdmin(admin.ModelAdmin):
     list_display   = ['candidat', 'filiere', 'statut_badge', 'score', 'classement',
                       'is_suspect', 'score_authenticite', 'date_soumission']
-    list_filter    = ['statut', 'filiere', 'is_suspect', 'mention', 'massar_verifie']
+    list_filter    = ['statut', 'filiere', 'is_suspect', 'mention']
     search_fields  = ['candidat__nom', 'candidat__prenom', 'candidat__user__cin',
                       'code_massar', 'cne']
     readonly_fields = ['score', 'classement', 'score_confiance_ocr', 'is_suspect',
-                       'score_authenticite', 'massar_verifie',
+                       'score_authenticite',
                        'date_soumission', 'created_at', 'updated_at',
                        'rapport_verification']
-    inlines        = [DocumentInline, NoteMatiereInline]
+    inlines        = [DocumentInline, NoteSemestreInline]
     ordering       = ['-score']
 
     fieldsets = (
@@ -77,8 +76,7 @@ class DossierAdmin(admin.ModelAdmin):
         """Affiche le rapport de vérification d'authenticité en HTML."""
         score = obj.score_authenticite
         alertes = obj.alertes_verification or []
-        massar = obj.massar_verifie
-
+        alertes = obj.alertes_verification or []
         if score is None:
             return format_html('<em style="color:gray">Aucune vérification effectuée</em>')
 
@@ -120,8 +118,6 @@ class DossierAdmin(admin.ModelAdmin):
                 <span style="background:{couleur}; color:white; padding:2px 8px;
                        border-radius:4px; font-size:0.85em">{niveau}</span>
                 &nbsp;&nbsp;
-                <strong>Massar :</strong>
-                {"✅ Vérifié" if massar else "❌ Non vérifié"}
             </div>
             <div style="margin-bottom:8px">
                 <strong>Recommandation :</strong> {reco}
@@ -139,3 +135,11 @@ class DossierAdmin(admin.ModelAdmin):
         return format_html(html)
 
     rapport_verification.short_description = 'Rapport de vérification'
+
+
+@admin.register(NoteSemestre)
+class NoteSemestreAdmin(admin.ModelAdmin):
+    list_display  = ['dossier', 'semestre', 'moyenne', 'session', 'mention']
+    list_filter   = ['semestre', 'session', 'mention']
+    search_fields = ['dossier__candidat__nom', 'dossier__candidat__prenom']
+    ordering      = ['dossier', 'semestre']

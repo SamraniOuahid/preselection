@@ -7,7 +7,7 @@ from .models import Filiere, DiplomaAccepte, HistoriqueAction
 class DiplomaAccepteSerializer(serializers.ModelSerializer):
     class Meta:
         model  = DiplomaAccepte
-        fields = ['id', 'nom_diplome', 'etablissements', 'is_active']
+        fields = ['id', 'nom_diplome', 'coefficient', 'etablissements', 'is_active']
 
 
 class FiliereSerializer(serializers.ModelSerializer):
@@ -21,10 +21,10 @@ class FiliereSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'nom', 'code', 'niveau', 'description',
             'places_disponibles', 'is_active', 'est_ouverte',
-            'date_ouverture', 'date_fermeture',
+            'date_ouverture', 'date_fermeture', 'coef_autre_diplome',
             'diplomes_acceptes', 'candidatures_count',
-            'date_ecrit', 'heure_ecrit', 'lieu_ecrit',
-            'date_oral', 'heure_oral', 'lieu_oral',
+            'date_ecrit', 'lieu_ecrit',
+            'date_oral', 'lieu_oral',
             'epreuve_info',
         ]
         read_only_fields = ['id']
@@ -38,22 +38,18 @@ class FiliereSerializer(serializers.ModelSerializer):
         epreuve = obj.epreuves.order_by('-created_at').first()
         
         # Obtenir les dates de l'écrit définies sur la filière
-        filiere_date_ecrit = obj.date_ecrit.strftime('%d/%m/%Y') if obj.date_ecrit else None
-        filiere_heure_ecrit = obj.heure_ecrit
+        filiere_date_ecrit = obj.date_ecrit.isoformat() if obj.date_ecrit else None
         filiere_lieu_ecrit = obj.lieu_ecrit
 
         # Obtenir les dates de l'oral définies sur la filière
-        filiere_date_oral = obj.date_oral.strftime('%d/%m/%Y') if obj.date_oral else None
-        filiere_heure_oral = obj.heure_oral
+        filiere_date_oral = obj.date_oral.isoformat() if obj.date_oral else None
         filiere_lieu_oral = obj.lieu_oral
 
         if not epreuve:
             return {
                 'date_ecrit': filiere_date_ecrit,
-                'heure_ecrit': filiere_heure_ecrit,
                 'lieu_ecrit': filiere_lieu_ecrit,
                 'date_oral': filiere_date_oral,
-                'heure_oral': filiere_heure_oral,
                 'lieu_oral': filiere_lieu_oral,
                 'seuil_admission': None,
                 'note_sur': None,
@@ -61,12 +57,10 @@ class FiliereSerializer(serializers.ModelSerializer):
             }
         
         return {
-            'date_ecrit':  epreuve.date_epreuve.strftime('%d/%m/%Y') if epreuve.date_epreuve else filiere_date_ecrit,
-            'heure_ecrit': filiere_heure_ecrit, # de la filière
-            'lieu_ecrit':  filiere_lieu_ecrit,  # de la filière
-            'date_oral':   epreuve.date_oral.strftime('%d/%m/%Y')   if epreuve.date_oral   else filiere_date_oral,
-            'heure_oral':  epreuve.heure_oral or filiere_heure_oral,
-            'lieu_oral':   epreuve.lieu_oral or filiere_lieu_oral,
+            'date_ecrit':  filiere_date_ecrit,
+            'lieu_ecrit':  filiere_lieu_ecrit,
+            'date_oral':   filiere_date_oral,
+            'lieu_oral':   filiere_lieu_oral,
             'seuil_admission': float(epreuve.seuil_admission),
             'note_sur':    float(epreuve.note_sur),
             'statut':      epreuve.statut,

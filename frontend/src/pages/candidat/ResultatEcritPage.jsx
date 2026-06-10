@@ -176,7 +176,7 @@ function ResultCard({ dossier }) {
               <div className="bg-purple-50 p-3 rounded-lg border border-purple-100 text-center">
                 <div className="text-xs font-semibold text-purple-400 uppercase mb-1">⏰ Heure</div>
                 <div className="text-sm font-bold text-purple-900">
-                  {dossier.heure_oral || '09:00'}
+                  {dossier.date_oral ? new Date(dossier.date_oral).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '09:00'}
                 </div>
               </div>
               <div className="bg-amber-50 p-3 rounded-lg border border-amber-100 text-center">

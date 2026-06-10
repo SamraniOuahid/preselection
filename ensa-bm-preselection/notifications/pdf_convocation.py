@@ -117,9 +117,9 @@ def generer_convocation_pdf(dossier):
     note_obj = dossier.notes_ecrits.first()
     epreuve = note_obj.epreuve if note_obj else None
 
-    date_oral = epreuve.date_oral if epreuve and epreuve.date_oral else None
-    lieu_oral = epreuve.lieu_oral if epreuve else 'ENSA Béni Mellal'
-    heure_oral = epreuve.heure_oral if epreuve else '09:00'
+    date_oral = filiere.date_oral
+    lieu_oral = filiere.lieu_oral or 'ENSA Béni Mellal'
+    heure_oral = filiere.date_oral.strftime('%H:%M') if filiere.date_oral else '09:00'
     note_ecrite = float(note_obj.note) if note_obj and note_obj.note else None
     note_sur = float(epreuve.note_sur) if epreuve else 20
     rang_final = dossier.rang_final

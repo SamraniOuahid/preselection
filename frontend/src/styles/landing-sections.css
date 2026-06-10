@@ -84,10 +84,11 @@
 /* ═══ STATS ═══ */
 .ensa-stats{position:relative;padding:60px 24px;overflow:hidden}
 .ensa-stats-overlay{position:absolute;inset:0;background:linear-gradient(135deg,#0D1F3C 0%,#1B3A6B 50%,#2E86C1 100%)}
-.ensa-stats-inner{position:relative;z-index:1;display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.ensa-stats-inner{position:relative;z-index:1;display:grid;grid-template-columns:repeat(5,1fr);gap:24px}
 .ensa-stat-item{text-align:center;padding:24px 16px}
 .ensa-stat-number{font-family:var(--font-family-display);font-size:40px;font-weight:700;color:#fff;line-height:1;margin-bottom:8px}
 .ensa-stat-label{font-size:13px;color:rgba(255,255,255,.55);font-weight:500}
+@media(max-width:1024px){.ensa-stats-inner{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:768px){.ensa-stats-inner{grid-template-columns:repeat(2,1fr)}.ensa-stat-number{font-size:32px}}
 
 /* ═══ DOCUMENTS ═══ */

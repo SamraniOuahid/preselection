@@ -13,10 +13,7 @@
 .ensa-navbar-inner{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:100%}
 
 .ensa-logo{display:flex;align-items:center;gap:12px;text-decoration:none}
-.ensa-logo-img{height:42px;width:auto;object-fit:contain}
-.ensa-logo-text{display:flex;flex-direction:column}
-.ensa-logo-name{font-size:14px;font-weight:700;color:#1B3A6B;line-height:1.2}
-.ensa-logo-sub{font-size:10px;color:#95A5A6;line-height:1.2}
+.ensa-logo-img{height:52px;width:auto;object-fit:contain;background-color:#ffffff;padding:3px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
 
 .ensa-nav-desktop{display:flex;align-items:center;gap:4px}
 @media(max-width:1024px){.ensa-nav-desktop{display:none}}

@@ -12,10 +12,6 @@ export default function Footer() {
           <div className="ensa-footer-col">
             <div className="ensa-footer-brand">
               <img src="/ensa_logo.png" alt="ENSA BM" className="ensa-footer-logo" />
-              <div>
-                <div className="ensa-footer-brand-name">ENSA Béni Mellal</div>
-                <div className="ensa-footer-brand-uni">Université Sultan Moulay Slimane</div>
-              </div>
             </div>
             <p className="ensa-footer-desc">
               Portail officiel de présélection des candidats pour les cycles Ingénieur
@@ -86,7 +82,7 @@ export default function Footer() {
         {/* Copyright */}
         <div className="ensa-footer-bottom">
           <span className="ensa-footer-copy">
-            © 2025 ENSA Béni Mellal — Université Sultan Moulay Slimane — Tous droits réservés
+            © {new Date().getFullYear()} ENSA Béni Mellal — Université Sultan Moulay Slimane — Tous droits réservés
           </span>
           <div className="ensa-footer-morocco">
             <div className="ensa-morocco-bar" style={{ background: '#006233' }} />

@@ -21,19 +21,17 @@ class Filiere(models.Model):
     date_ouverture     = models.DateTimeField(null=True, blank=True)
     date_fermeture     = models.DateTimeField(null=True, blank=True)
     # ── Informations épreuve écrite ──────────────────────────────────
-    date_ecrit         = models.DateField(null=True, blank=True,
-                           help_text="Date de l'épreuve écrite")
-    heure_ecrit        = models.CharField(max_length=50, null=True, blank=True,
-                           help_text="Heure de l'épreuve écrite (ex: 09:00)")
+    date_ecrit         = models.DateTimeField(null=True, blank=True,
+                           help_text="Date et heure de l'épreuve écrite")
     lieu_ecrit         = models.CharField(max_length=255, null=True, blank=True,
                            help_text="Lieu de l'épreuve écrite")
     # ── Informations épreuve orale ───────────────────────────────────
-    date_oral          = models.DateField(null=True, blank=True,
-                           help_text="Date de l'épreuve orale")
-    heure_oral         = models.CharField(max_length=50, null=True, blank=True,
-                           help_text="Heure de l'épreuve orale (ex: 09:00)")
+    date_oral          = models.DateTimeField(null=True, blank=True,
+                           help_text="Date et heure de l'épreuve orale")
     lieu_oral          = models.CharField(max_length=255, null=True, blank=True,
                            help_text="Lieu de l'épreuve orale")
+    coef_autre_diplome = models.DecimalField(max_digits=3, decimal_places=2, default=0.80,
+                                             help_text="Coefficient appliqué aux diplômes 'Autre'")
     created_at         = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -56,12 +54,17 @@ class Filiere(models.Model):
     def candidatures_count(self):
         return self.dossiers.count()
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
 
 class DiplomaAccepte(models.Model):
 
     id              = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     filiere         = models.ForeignKey(Filiere, on_delete=models.CASCADE, related_name='diplomes_acceptes')
     nom_diplome     = models.CharField(max_length=200)  # ex: "DUT Informatique"
+    coefficient     = models.DecimalField(max_digits=3, decimal_places=2, default=1.00,
+                                         help_text="Coefficient multiplicateur pour le score du diplôme")
     # Liste des établissements acceptés, stockée en JSON
     # Si vide = tous les établissements sont acceptés
     etablissements  = models.JSONField(default=list, blank=True)
@@ -72,7 +75,7 @@ class DiplomaAccepte(models.Model):
         verbose_name = 'Diplôme Accepté'
 
     def __str__(self):
-        return f"{self.nom_diplome} → {self.filiere.code}"
+        return f"{self.nom_diplome} (coeff: {self.coefficient}) → {self.filiere.code}"
 
 
 class HistoriqueAction(models.Model):
@@ -116,13 +119,6 @@ class EpreuveEcrite(models.Model):
     filiere         = models.ForeignKey(Filiere, on_delete=models.CASCADE, related_name='epreuves')
     nom             = models.CharField(max_length=200,
                         help_text="Ex : Épreuve écrite — GIR Bac+2 — Session 2025")
-    date_epreuve    = models.DateField(null=True, blank=True)
-    date_oral       = models.DateField(null=True, blank=True,
-                        help_text="Date de l'épreuve orale")
-    lieu_oral       = models.CharField(max_length=255, null=True, blank=True,
-                        help_text="Lieu de l'épreuve orale")
-    heure_oral      = models.CharField(max_length=50, null=True, blank=True,
-                        help_text="Heure de l'épreuve orale")
     seuil_admission = models.DecimalField(max_digits=5, decimal_places=2, default=10.00,
                         help_text="Note minimale pour être admis")
     note_sur        = models.DecimalField(max_digits=5, decimal_places=2, default=20.00,
@@ -135,6 +131,8 @@ class EpreuveEcrite(models.Model):
                         null=True, related_name='epreuves_creees')
     created_at      = models.DateTimeField(auto_now_add=True)
     updated_at      = models.DateTimeField(auto_now=True)
+
+
 
     class Meta:
         db_table = 'epreuves_ecrites'
@@ -207,3 +205,116 @@ class NoteEcrite(models.Model):
         else:
             self.resultat = self.Resultat.RECALE
         self.save()
+
+
+# ──────────────────────────────────────────────────────────────────
+# EpreuveOrale — Gestion des épreuves orales
+# ──────────────────────────────────────────────────────────────────
+
+class EpreuveOrale(models.Model):
+    """Épreuve orale pour une filière donnée."""
+
+    class Statut(models.TextChoices):
+        PLANIFIEE         = 'PLANIFIEE',         'Planifiée'
+        EN_COURS          = 'EN_COURS',          'En cours'
+        TERMINEE          = 'TERMINEE',          'Terminée'
+        RESULTATS_PUBLIES = 'RESULTATS_PUBLIES', 'Résultats publiés'
+
+    id              = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    filiere         = models.ForeignKey(Filiere, on_delete=models.CASCADE, related_name='epreuves_oral')
+    epreuve_ecrite  = models.ForeignKey(EpreuveEcrite, on_delete=models.SET_NULL,
+                        null=True, blank=True, related_name='epreuves_oral',
+                        help_text="Épreuve écrite liée")
+    nom             = models.CharField(max_length=200,
+                        help_text="Ex : Entretien oral — TDI Bac+2 — 2025")
+    duree_minutes   = models.PositiveIntegerField(default=20,
+                        help_text="Durée de chaque entretien en minutes")
+    statut          = models.CharField(max_length=25, choices=Statut.choices,
+                        default=Statut.PLANIFIEE)
+    created_by      = models.ForeignKey(User, on_delete=models.SET_NULL,
+                        null=True, related_name='epreuves_oral_creees')
+    created_at      = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'epreuves_orales'
+        verbose_name = 'Épreuve Orale'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.nom} [{self.get_statut_display()}]"
+
+    @property
+    def nb_convoques(self):
+        return self.convocations.count()
+
+    @property
+    def nb_acceptes(self):
+        return self.convocations.filter(decision='ACCEPTE').count()
+
+    @property
+    def nb_refuses(self):
+        return self.convocations.filter(decision='REFUSE').count()
+
+    @property
+    def nb_absents(self):
+        return self.convocations.filter(decision='ABSENT').count()
+
+    @property
+    def nb_en_attente(self):
+        return self.convocations.filter(decision='EN_ATTENTE').count()
+
+
+# ──────────────────────────────────────────────────────────────────
+# ConvocationOrale — Convocation individuelle d'un candidat
+# ──────────────────────────────────────────────────────────────────
+
+class ConvocationOrale(models.Model):
+    """Convocation d'un candidat à une épreuve orale."""
+
+    class Decision(models.TextChoices):
+        EN_ATTENTE = 'EN_ATTENTE', 'En attente de décision'
+        ACCEPTE    = 'ACCEPTE',    'Accepté'
+        REFUSE     = 'REFUSE',     'Refusé'
+        ABSENT     = 'ABSENT',     'Absent à l\'oral'
+
+    id              = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    epreuve_oral    = models.ForeignKey(EpreuveOrale, on_delete=models.CASCADE,
+                        related_name='convocations')
+    dossier         = models.ForeignKey('candidatures.Dossier', on_delete=models.CASCADE,
+                        related_name='convocations_oral')
+
+    # Créneau horaire assigné automatiquement
+    heure_passage   = models.TimeField(null=True, blank=True,
+                        help_text="Calculée automatiquement : heure_debut + (rang × duree_minutes)")
+    numero_passage  = models.PositiveIntegerField(null=True,
+                        help_text="Ordre de passage dans la journée")
+
+    # Décision de l'oral
+    decision        = models.CharField(max_length=15, choices=Decision.choices,
+                        default=Decision.EN_ATTENTE)
+    commentaire_jury = models.TextField(blank=True,
+                        help_text="Note interne du jury (jamais visible au candidat)")
+    date_decision   = models.DateTimeField(null=True, blank=True)
+    decide_par      = models.ForeignKey(User, on_delete=models.SET_NULL,
+                        null=True, blank=True, related_name='decisions_oral')
+
+    # Documents requis vérifiés lors de l'oral
+    bac_verifie          = models.BooleanField(default=False)
+    diplome_verifie      = models.BooleanField(default=False)
+    releve_notes_verifie = models.BooleanField(default=False)
+    cin_verifie          = models.BooleanField(default=False)
+    dossier_complet      = models.BooleanField(default=False)
+
+    # Convocation générée
+    convocation_generee = models.BooleanField(default=False)
+    convocation_pdf     = models.FileField(upload_to='convocations/', null=True, blank=True)
+    date_generation     = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'convocations_orales'
+        verbose_name = 'Convocation Orale'
+        unique_together = ['epreuve_oral', 'dossier']
+        ordering = ['numero_passage']
+
+    def __str__(self):
+        return f"Convocation #{self.numero_passage} — {self.dossier} [{self.get_decision_display()}]"

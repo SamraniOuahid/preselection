@@ -4,21 +4,25 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, FolderOpen, FilePlus, User,
-  GraduationCap, Settings, X, Bell, ClipboardCheck, FileCheck2
+  GraduationCap, Settings, X, Bell, ClipboardCheck, FileCheck2,
+  BarChart3, Mic2, Calendar
 } from 'lucide-react';
 
 const candidatLinks = [
   { to: '/mes-dossiers',             icon: FolderOpen,      label: 'Mes Dossiers' },
   { to: '/nouveau-dossier',          icon: FilePlus,        label: 'Nouveau Dossier' },
   { to: '/candidat/resultats-ecrit', icon: FileCheck2,      label: 'Résultats Écrits' },
+  { to: '/candidat/convocation',     icon: Calendar,        label: 'Ma Convocation' },
   { to: '/candidat/notifications',   icon: Bell,            label: 'Mes Notifications' },
   { to: '/profil',                   icon: User,            label: 'Mon Profil' },
 ];
 
 const staffLinks = [
   { to: '/dashboard',        icon: LayoutDashboard,  label: 'Dashboard' },
+  { to: '/analytics',        icon: BarChart3,        label: 'Analytics' },
   { to: '/dossiers',         icon: FolderOpen,       label: 'Dossiers' },
   { to: '/admin/epreuves',   icon: ClipboardCheck,   label: 'Épreuves Écrites' },
+  { to: '/admin/epreuves-oral', icon: Mic2,          label: 'Épreuves Orales' },
   { to: '/filieres',         icon: GraduationCap,    label: 'Filières' },
   { to: '/config-scoring',   icon: Settings,         label: 'Scoring & Règles' },
 ];
@@ -50,11 +54,7 @@ export default function Sidebar({ isOpen, onClose }) {
         {/* Logo ENSA réel */}
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/ensa_logo.png" alt="ENSA BM" className="h-9 w-auto object-contain rounded-md" />
-            <div>
-              <div className="text-white font-bold text-sm">ENSA BM</div>
-              <div className="text-white/40 text-[10px]">Présélection</div>
-            </div>
+            <img src="/ensa_logo.png" alt="ENSA BM" className="h-12 w-auto object-contain bg-white p-1.5 rounded-lg shadow-sm" />
           </div>
           <button
             onClick={onClose}
@@ -118,7 +118,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
         {/* Footer */}
         <div className="px-5 py-3 border-t border-white/10 flex items-center justify-between">
-          <span className="text-white/30 text-[10px]">© 2025 ENSA BM</span>
+          <span className="text-white/30 text-[10px]">© {new Date().getFullYear()} ENSA BM</span>
           <div className="flex gap-1">
             <div className="w-3 h-1 rounded-full bg-[#006233]/50" />
             <div className="w-3 h-1 rounded-full bg-[#C1272D]/50" />

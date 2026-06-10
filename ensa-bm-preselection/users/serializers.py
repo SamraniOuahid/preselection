@@ -45,6 +45,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 attrs[self.username_field].strip()
             )
         data = super().validate(attrs)
+        
+        if not self.user.email_verified:
+            raise serializers.ValidationError({"detail": "Vous devez vérifier votre adresse email avant de vous connecter."})
+            
         data['user'] = UserSerializer(self.user).data
         return data
 
@@ -108,3 +112,15 @@ class ChangePasswordSerializer(serializers.Serializer):
         if not user.check_password(value):
             raise serializers.ValidationError("Ancien mot de passe incorrect.")
         return value
+
+class VerifyEmailConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, validators=[validate_password])

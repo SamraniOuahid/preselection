@@ -41,7 +41,7 @@ class DossierViewSet(viewsets.ModelViewSet):
         user = self.request.user
         qs   = Dossier.objects.select_related(
             'candidat', 'candidat__user', 'filiere'
-        ).prefetch_related('documents', 'notes', 'historique')
+        ).prefetch_related('documents', 'notes_semestres', 'historique')
 
         # Un candidat ne voit que ses propres dossiers
         if user.is_candidat:
@@ -86,11 +86,10 @@ class DossierViewSet(viewsets.ModelViewSet):
         """
         Déclenche la chaîne complète :
         1. Passer statut → EN_TRAITEMENT
-        2. Extraire les données des PDFs
-        3. Appliquer les règles de rejet
-        4. Calculer le score si non rejeté
-        5. Envoyer la notification email
+        2. Lancer l'analyse (OCR, règles, scoring) en arrière-plan
+        3. Retourner une réponse immédiate
         """
+        import threading
         from .services.extraction import extraire_donnees_dossier
         from .services.regles     import evaluer_regles
         from .services.scoring    import calculer_score_dossier
@@ -113,60 +112,73 @@ class DossierViewSet(viewsets.ModelViewSet):
         # Étape 1 — Passer en traitement
         dossier.changer_statut(Dossier.Statut.EN_TRAITEMENT, acteur=request.user)
 
-        # Étape 2 — Extraction PDF
-        extraction_result = extraire_donnees_dossier(dossier)
-        if not extraction_result['succes']:
-            dossier.changer_statut(Dossier.Statut.INCOMPLET, commentaire=extraction_result['erreur'])
-            envoyer_notification(dossier, 'INCOMPLET')
-            return Response({"statut": "INCOMPLET", "message": extraction_result['erreur']})
+        def process_dossier_background(dossier_id):
+            from .models import Dossier
+            try:
+                # Reload dossier to avoid thread issues
+                dossier_bg = Dossier.objects.get(id=dossier_id)
+            except Dossier.DoesNotExist:
+                return
 
-        # Étape 2b — Vérification authenticité des documents
-        from .services.verification_document import analyser_dossier_complet
-        verification = analyser_dossier_complet(dossier)
+            # Étape 2 — Extraction PDF
+            extraction_result = extraire_donnees_dossier(dossier_bg)
+            if not extraction_result['succes']:
+                dossier_bg.changer_statut(Dossier.Statut.INCOMPLET, commentaire=extraction_result['erreur'])
+                envoyer_notification(dossier_bg, 'INCOMPLET')
+                return
 
-        # Si CRITIQUE → rejet automatique proposé (on le marque suspect)
-        if verification['recommandation'] == 'REJETER':
-            dossier.motif_rejet = (
-                "Documents non conformes — "
-                "Authenticité insuffisante. "
-                "Alertes : " + ", ".join(verification['alertes_critiques'])
-            )
-            dossier.is_suspect = True
-            dossier.save()
+            # Étape 2b — Vérification authenticité des documents
+            from .services.verification_document import analyser_dossier_complet
+            verification = analyser_dossier_complet(dossier_bg)
 
-        # Si VERIF_MANUELLE → marquer suspect mais continuer
-        if verification['recommandation'] == 'VERIF_MANUELLE':
-            dossier.is_suspect = True
-            dossier.save()
+            # Si CRITIQUE → rejet automatique proposé (on le marque suspect)
+            if verification['recommandation'] == 'REJETER':
+                dossier_bg.motif_rejet = (
+                    "Documents non conformes — "
+                    "Authenticité insuffisante. "
+                    "Alertes : " + ", ".join(verification['alertes_critiques'])
+                )
+                dossier_bg.is_suspect = True
+                dossier_bg.save(update_fields=['motif_rejet', 'is_suspect'])
 
-        # Étape 3 — Règles de rejet
-        rejet = evaluer_regles(dossier)
-        if rejet['rejete']:
-            dossier.motif_rejet = rejet['motif']
-            dossier.save()
-            if rejet.get("statut") == Dossier.Statut.INCOMPLET:
-                dossier.changer_statut(Dossier.Statut.INCOMPLET, commentaire=rejet['motif'])
-                envoyer_notification(dossier, 'INCOMPLET')
-                return Response({"statut": "INCOMPLET", "message": rejet['motif']})
-            # Pour tout autre rejet (diplôme, moyenne, etc.), on ne rejette pas automatiquement.
-            # On stocke le motif de rejet dans dossier.motif_rejet et on continue le traitement.
+            # Si VERIF_MANUELLE → marquer suspect mais continuer
+            if verification['recommandation'] == 'VERIF_MANUELLE':
+                dossier_bg.is_suspect = True
+                dossier_bg.save(update_fields=['is_suspect'])
 
-        # Étape 4 — Statut final puis scoring
-        if dossier.is_suspect:
-            dossier.changer_statut(Dossier.Statut.SUSPECT)
-        else:
-            dossier.changer_statut(Dossier.Statut.EN_ATTENTE)
+            # Étape 3 — Règles de rejet
+            rejet = evaluer_regles(dossier_bg)
+            if rejet['rejete']:
+                dossier_bg.motif_rejet = rejet['motif']
+                dossier_bg.save(update_fields=['motif_rejet'])
+                if rejet.get("statut") == Dossier.Statut.INCOMPLET:
+                    dossier_bg.changer_statut(Dossier.Statut.INCOMPLET, commentaire=rejet['motif'])
+                    envoyer_notification(dossier_bg, 'INCOMPLET')
+                    return
 
-        calculer_score_dossier(dossier)
+            # Étape 4 — Statut final puis scoring
+            if dossier_bg.is_suspect:
+                dossier_bg.changer_statut(Dossier.Statut.SUSPECT)
+            else:
+                dossier_bg.changer_statut(Dossier.Statut.EN_ATTENTE)
 
-        # Étape 5 — Notification
-        envoyer_notification(dossier, 'SOUMISSION')
+            calculer_score_dossier(dossier_bg)
 
-        final_statut = "SUSPECT" if dossier.is_suspect else "EN_ATTENTE"
+            # Étape 5 — Notification
+            envoyer_notification(dossier_bg, 'SOUMISSION')
+            
+            # Close db connections used in this thread
+            from django.db import connection
+            connection.close()
+
+        # Lancer le traitement en arrière-plan
+        thread = threading.Thread(target=process_dossier_background, args=(dossier.id,))
+        thread.start()
+
         return Response({
-            "statut": final_statut,
-            "score": float(dossier.score) if dossier.score else None,
-            "message": "Dossier soumis avec succès. Vous serez notifié par email."
+            "status": "success",
+            "statut": "EN_TRAITEMENT",
+            "message": "Dossier soumis avec succès. En cours d'examen."
         })
 
     @action(detail=True, methods=['post'], permission_classes=[IsResponsableOrAdmin])
@@ -263,7 +275,6 @@ class DossierViewSet(viewsets.ModelViewSet):
         return Response({
             'score_authenticite': dossier.score_authenticite,
             'alertes': dossier.alertes_verification,
-            'massar_verifie': dossier.massar_verifie,
             'par_document': [
                 {
                     'type': doc.type_doc,
@@ -275,24 +286,7 @@ class DossierViewSet(viewsets.ModelViewSet):
             ]
         })
 
-    @action(detail=True, methods=['post'], permission_classes=[IsResponsableOrAdmin])
-    def marquer_massar_verifie(self, request, pk=None):
-        """
-        POST /api/dossiers/{id}/marquer_massar_verifie/
-        Le responsable confirme la vérification manuelle via Massar.
-        """
-        from administration.models import HistoriqueAction
-        dossier = self.get_object()
-        dossier.massar_verifie = True
-        dossier.is_suspect = False
-        dossier.save()
-        HistoriqueAction.objects.create(
-            dossier=dossier,
-            acteur=request.user,
-            action='VALIDATION',
-            commentaire='Vérification Massar confirmée manuellement'
-        )
-        return Response({'message': 'Dossier vérifié via Massar.'})
+
 
     @action(detail=True, methods=['get'])
     def convocation_ecrit(self, request, pk=None):

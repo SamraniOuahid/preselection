@@ -18,6 +18,7 @@ export default function RegisterPage() {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const { register, handleSubmit, watch, formState: { errors }, trigger } = useForm({
     mode: 'onChange',
@@ -43,7 +44,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await registerUser(data);
-      navigate('/mes-dossiers');
+      setIsSuccess(true);
     } catch (err) {
       const errors = err.response?.data;
       if (typeof errors === 'object') {
@@ -98,6 +99,22 @@ export default function RegisterPage() {
         <AlertBanner variant="error">{serverError}</AlertBanner>
       )}
 
+      {isSuccess ? (
+        <div className="flex flex-col items-center justify-center p-8 bg-white border border-gray-100 rounded-xl shadow-sm text-center space-y-4 animate-fade-in">
+          <div className="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 mb-2">
+            <Mail size={32} />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900">Vérifiez votre e-mail</h3>
+          <p className="text-gray-600 text-sm max-w-xs mx-auto">
+            Un e-mail de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception pour activer votre compte.
+          </p>
+          <div className="pt-4 w-full">
+            <Link to="/login" className="btn btn-primary w-full">
+              Aller à la connexion
+            </Link>
+          </div>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* ── Étape 1 : Compte ── */}
         {step === 1 && (
@@ -326,6 +343,7 @@ export default function RegisterPage() {
           </div>
         )}
       </form>
+      )}
 
       {/* Lien connexion */}
       <div className="text-center mt-5 animate-fade-in" style={{ animationDelay: '0.4s' }}>

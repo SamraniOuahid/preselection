@@ -174,7 +174,7 @@ def exporter_resultats_excel(epreuve_id):
         ('', ''),
         ("Épreuve", epreuve.nom),
         ("Filière", epreuve.filiere.nom),
-        ("Date de l'épreuve", str(epreuve.date_epreuve or 'Non définie')),
+        ("Date de l'épreuve", epreuve.filiere.date_ecrit.strftime('%d/%m/%Y %H:%M') if epreuve.filiere.date_ecrit else 'Non définie'),
         ('', ''),
         ("Total candidats", total_candidats),
         ("Nombre d'admis", nb_admis),

@@ -11,8 +11,10 @@ import RapportVerificationPanel from '../../components/verification/RapportVerif
 import {
   ArrowLeft, User, Mail, Phone, Calendar, GraduationCap,
   Trophy, FileText, Upload, CheckCircle, AlertTriangle,
-  XCircle, MessageSquare, Eye, ShieldCheck
+  XCircle, MessageSquare, Eye, ShieldCheck, Download
 } from 'lucide-react';
+import { formatDiplome, isDiplomeAutre } from '../../utils/diplome';
+import { inscrireAcceptes } from '../../api/oral';
 
 export default function DetailDossierPage() {
   const { id } = useParams();
@@ -117,6 +119,18 @@ export default function DetailDossierPage() {
           <div className="mt-1 font-semibold">Motif détecté : {dossier.motif_rejet}</div>
         </AlertBanner>
       )}
+      {dossier.statut === 'ORAL_ACCEPTE' && (
+        <AlertBanner variant="success" title="Candidat Accepté" className="mb-5">
+          Ce candidat a été accepté suite à l'entretien oral. Il peut être inscrit définitivement.
+        </AlertBanner>
+      )}
+
+      {dossier.statut === 'CONVOQUE_ORAL' && (
+        <AlertBanner variant="info" title="Candidat Convoqué" className="mb-5">
+          Ce candidat est convoqué à l'entretien oral.
+        </AlertBanner>
+      )}
+
       {!['EN_ATTENTE', 'SUSPECT'].includes(dossier.statut) && dossier.motif_rejet && (
         <AlertBanner variant="error" title="Motif de rejet" className="mb-5">{dossier.motif_rejet}</AlertBanner>
       )}
@@ -138,14 +152,21 @@ export default function DetailDossierPage() {
                 { Icon: Mail, label: 'Email', value: dossier.candidat?.user_email },
                 { Icon: Phone, label: 'Téléphone', value: dossier.candidat?.telephone || '—' },
                 { Icon: Calendar, label: 'Naissance', value: dossier.candidat?.date_naissance || '—' },
-                { Icon: GraduationCap, label: 'Diplôme', value: dossier.diplome_obtenu },
+                { Icon: GraduationCap, label: 'Diplôme', value: formatDiplome(dossier.diplome_obtenu), extraBadge: isDiplomeAutre(dossier.diplome_obtenu) },
                 { Icon: GraduationCap, label: 'Établissement', value: dossier.etablissement_origine },
-              ].map(({ Icon, label, value, mono }) => (
+              ].map(({ Icon, label, value, mono, extraBadge }) => (
                 <div key={label} className="flex items-start gap-2">
                   <Icon size={14} className="text-text-muted mt-0.5 flex-shrink-0" />
                   <div>
                     <span className="text-text-muted text-xs">{label}</span>
-                    <div className={`font-medium text-sm ${mono ? 'font-mono' : ''}`}>{value || '—'}</div>
+                    <div className={`font-medium text-sm ${mono ? 'font-mono' : ''}`}>
+                      {value || '—'}
+                      {extraBadge && (
+                        <span className="ml-1.5 text-[10px] font-semibold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">
+                          hors liste
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -204,14 +225,21 @@ export default function DetailDossierPage() {
                   { label: 'Email', value: dossier.candidat?.user_email },
                   { label: 'Téléphone', value: dossier.candidat?.telephone },
                   { label: 'Date de naissance', value: dossier.candidat?.date_naissance },
-                  { label: 'Diplôme obtenu', value: dossier.diplome_obtenu },
+                  { label: 'Diplôme obtenu', value: formatDiplome(dossier.diplome_obtenu), isAutre: isDiplomeAutre(dossier.diplome_obtenu) },
                   { label: 'Établissement', value: dossier.etablissement_origine },
                   { label: 'Mention', value: dossier.mention || '—' },
                   { label: 'Année obtention', value: dossier.annee_obtention },
                 ].map((item) => (
                   <div key={item.label} className="border-b border-gray-50 pb-2">
                     <span className="text-xs text-text-muted">{item.label}</span>
-                    <p className="text-sm font-medium text-text-primary mt-0.5">{item.value || '—'}</p>
+                    <p className="text-sm font-medium text-text-primary mt-0.5">
+                      {item.value || '—'}
+                      {item.isAutre && (
+                        <span className="ml-1.5 text-[10px] font-semibold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">
+                          hors liste
+                        </span>
+                      )}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -221,30 +249,20 @@ export default function DetailDossierPage() {
           {/* Onglet Notes */}
           {activeTab === 'notes' && (
             <div className="card rounded-t-none border-t-0 p-5">
-              {dossier.notes?.length > 0 ? (
+              {dossier.notes_semestres?.length > 0 ? (
                 <>
                   <div className="table-container">
                     <table className="table">
                       <thead>
-                        <tr><th>Matière</th><th>Déclarée</th><th>Extraite</th><th>Écart</th><th>Statut</th></tr>
+                        <tr><th>Semestre</th><th>Moyenne</th><th>Session</th><th>Mention</th></tr>
                       </thead>
                       <tbody>
-                        {dossier.notes.map((n) => (
-                          <tr key={n.id} className={n.is_suspect ? 'bg-warning-50/50' : ''}>
-                            <td className="font-medium text-sm">{n.matiere}</td>
-                            <td className="font-mono text-sm">{n.note_declaree != null ? `${n.note_declaree}` : '—'}</td>
-                            <td className="font-mono text-sm">{n.note_extraite != null ? `${n.note_extraite}` : '—'}</td>
-                            <td className={`font-mono font-semibold text-sm ${n.is_suspect ? 'text-danger-500' : 'text-success-600'}`}>
-                              {n.ecart != null ? n.ecart : '—'}
-                            </td>
-                            <td>
-                              {n.is_suspect
-                                ? <span className="badge badge-suspect text-[10px]"><AlertTriangle size={10} /> Suspect</span>
-                                : n.note_extraite != null
-                                  ? <span className="badge badge-preselectionne text-[10px]"><CheckCircle size={10} /> OK</span>
-                                  : <span className="badge badge-brouillon text-[10px]">Non vérifié</span>
-                              }
-                            </td>
+                        {dossier.notes_semestres.map((n) => (
+                          <tr key={n.id}>
+                            <td className="font-bold text-primary-700 text-sm">{n.semestre}</td>
+                            <td className="font-mono text-sm">{n.moyenne != null ? `${n.moyenne}` : '—'}</td>
+                            <td className="text-sm">{n.session_label || (n.session === 'NORMALE' ? 'Normale' : 'Rattrapage')}</td>
+                            <td className="text-sm">{n.mention_label || n.mention}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -252,7 +270,7 @@ export default function DetailDossierPage() {
                   </div>
                   {dossier.score_confiance_ocr != null && (
                     <div className="mt-3 text-xs text-text-muted flex items-center gap-2">
-                      Confiance OCR :
+                      Confiance documents :
                       <span className={`font-mono font-semibold ${dossier.score_confiance_ocr >= 0.8 ? 'text-success-600' : 'text-warning-600'}`}>
                         {(dossier.score_confiance_ocr * 100).toFixed(0)}%
                       </span>
@@ -352,6 +370,36 @@ export default function DetailDossierPage() {
                   <XCircle size={14} /> Rejeter {dossier.motif_rejet ? 'manuellement' : ''}
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Action Oral */}
+          {dossier.statut === 'CONVOQUE_ORAL' && (
+            <div className="card p-5">
+               <h3 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
+                <Calendar size={15} /> Entretien Oral
+              </h3>
+              <button className="btn w-full flex justify-center gap-2 bg-[#1B3A6B] text-white hover:bg-[#142D52]" onClick={() => window.open(`/api/convocations/${dossier.convocations_oral?.[0]?.id}/telecharger_pdf/`, '_blank')}>
+                <Download size={16} /> Télécharger convocation
+              </button>
+            </div>
+          )}
+
+          {dossier.statut === 'ORAL_ACCEPTE' && (
+            <div className="card p-5">
+               <h3 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
+                <CheckCircle size={15} /> Inscription Définitive
+              </h3>
+              <button className="btn btn-success w-full flex justify-center gap-2" onClick={async () => {
+                if (window.confirm("Inscrire ce candidat définitivement ?")) {
+                   try {
+                     await inscrireAcceptes(dossier.convocations_oral[0].epreuve_oral);
+                     rafraichirDossier();
+                   } catch(e) {}
+                }
+              }}>
+                <CheckCircle size={16} /> Inscrire définitivement
+              </button>
             </div>
           )}
 

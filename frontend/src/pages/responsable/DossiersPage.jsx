@@ -8,7 +8,7 @@ import EmptyState from '../../components/common/EmptyState';
 import {
   Search, Download, AlertTriangle, ArrowRight,
   ChevronLeft, ChevronRight, FolderOpen,
-  Shield, ShieldAlert, ShieldCheck
+  Shield, ShieldAlert
 } from 'lucide-react';
 import BoutonNotifierTous from '../../components/notifications/BoutonNotifierTous';
 
@@ -31,7 +31,7 @@ export default function DossiersPage() {
   const [search, setSearch] = useState('');
   const [filterStatut, setFilterStatut] = useState(searchParams.get('statut') || '');
   const [suspectOnly, setSuspectOnly] = useState(searchParams.get('suspect') === 'true');
-  const [nonVerifiesMassar, setNonVerifiesMassar] = useState(false);
+
   const [sortBy, setSortBy] = useState('date');
   const [exporting, setExporting] = useState(false);
   const [page, setPage] = useState(1);
@@ -76,42 +76,38 @@ export default function DossiersPage() {
     finally { setExporting(false); }
   };
 
-  // Filtrage local supplémentaire pour "Non vérifiés Massar"
-  const dossiersFiltrés = dossiers.filter((d) => {
-    if (nonVerifiesMassar) {
-      const isEnAttenteOuPreselectionne = ['EN_ATTENTE', 'PRESELECTIONNE'].includes(d.statut);
-      return !d.massar_verifie && isEnAttenteOuPreselectionne;
-    }
-    return true;
-  });
+  // Filtrage local (supprimé Massar)
+  const dossiersFiltrés = dossiers;
 
   // Pagination locale
   const totalPages = Math.ceil(dossiersFiltrés.length / pageSize);
   const paginatedData = dossiersFiltrés.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="ensa-page-header">
-        <div className="ensa-page-header-row">
-          <div>
-            <h1 className="ensa-page-title">Gestion des Dossiers</h1>
-            <p className="ensa-page-subtitle">{dossiersFiltrés.length} dossier{dossiersFiltrés.length !== 1 ? 's' : ''}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <BoutonNotifierTous variant="outline" onSuccess={fetchDossiers} />
-            <button onClick={handleExport} className="btn btn-outline btn-sm" disabled={exporting}>
-              <Download size={14} /> {exporting ? 'Export...' : 'Exporter Excel'}
-            </button>
+    <div>
+      {/* Wrapper collant pour le header et les filtres */}
+      <div className="sticky top-0 z-20 -mx-4 -mt-4 px-4 pt-4 sm:-mx-6 sm:-mt-6 sm:px-6 sm:pt-6 bg-surface pb-4">
+        <div className="ensa-page-header animate-fade-in mb-4 sm:mb-6">
+          <div className="ensa-page-header-row">
+            <div>
+              <h1 className="ensa-page-title">Gestion des Dossiers</h1>
+              <p className="ensa-page-subtitle">{dossiersFiltrés.length} dossier{dossiersFiltrés.length !== 1 ? 's' : ''}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <BoutonNotifierTous variant="outline" onSuccess={fetchDossiers} />
+              <button onClick={handleExport} className="btn btn-outline btn-sm" disabled={exporting}>
+                <Download size={14} /> {exporting ? 'Export...' : 'Exporter Excel'}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Barre de filtres */}
-      <div className="bg-white rounded-lg border border-border p-4 sticky top-16 z-20 shadow-sm">
-        <div className="flex flex-wrap gap-3 items-center">
+        {/* Barre de filtres */}
+        <div className="bg-white rounded-lg border border-border p-4 shadow-sm">
+          <div className="flex flex-wrap gap-3 items-center">
           <form onSubmit={handleSearch} className="flex-1 min-w-[200px] relative">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
-            <input className="input pl-10" placeholder="Rechercher par nom, prénom ou CIN..."
+            <input className="input input-with-icon-left" placeholder="Rechercher par nom, prénom ou CIN..."
               value={search} onChange={(e) => setSearch(e.target.value)} />
           </form>
 
@@ -132,22 +128,21 @@ export default function DossiersPage() {
             <AlertTriangle size={14} className="text-suspect-500" /> Suspects
           </label>
 
-          <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer whitespace-nowrap">
-            <input type="checkbox" checked={nonVerifiesMassar} onChange={(e) => { setNonVerifiesMassar(e.target.checked); setPage(1); }}
-              className="w-4 h-4 accent-primary-500" />
-            <ShieldAlert size={14} className="text-primary-600" /> Non vérifiés Massar
-          </label>
+
         </div>
       </div>
+    </div>
 
       {/* Tableau */}
       {loading ? (
-        <div className="skeleton h-96 rounded-xl" />
+        <div className="skeleton h-96 rounded-xl animate-fade-in mt-6" />
       ) : dossiersFiltrés.length === 0 ? (
-        <EmptyState title="Aucun dossier trouvé" description="Essayez de modifier vos filtres de recherche." icon={FolderOpen} />
+        <div className="mt-6">
+          <EmptyState title="Aucun dossier trouvé" description="Essayez de modifier vos filtres de recherche." icon={FolderOpen} />
+        </div>
       ) : (
-        <>
-          <div className="ensa-card overflow-x-auto">
+        <div className="animate-fade-in mt-6">
+          <div className="ensa-card overflow-x-auto bg-white">
             <div className="ensa-table-wrap min-w-[1000px]" style={{ border: 'none', borderRadius: 0 }}>
               <table className="table">
                 <thead>
@@ -205,20 +200,15 @@ export default function DossiersPage() {
                         )}
                       </td>
 
-                      {/* Colonne Vérification (Suspect / Massar) */}
+                      {/* Colonne Vérification (Suspect) */}
                       <td className="text-center">
                         {d.is_suspect ? (
                           <span className="inline-flex items-center gap-1 text-red-600 font-semibold text-xs" title="Dossier suspect">
                             <ShieldAlert size={16} />
                             Suspect
                           </span>
-                        ) : d.massar_verifie ? (
-                          <span className="inline-flex items-center gap-1 text-green-600 font-semibold text-xs" title="Vérifié via Massar">
-                            <ShieldCheck size={16} />
-                            Massar
-                          </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-gray-400 text-xs" title="Non vérifié">
+                          <span className="inline-flex items-center gap-1 text-gray-400 text-xs" title="Vérification">
                             <Shield size={16} />
                             —
                           </span>
@@ -242,7 +232,7 @@ export default function DossiersPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center justify-between mt-4 mb-6">
               <span className="text-sm text-text-muted">
                 Affichage de {(page - 1) * pageSize + 1} à {Math.min(page * pageSize, dossiersFiltrés.length)} sur {dossiersFiltrés.length} dossiers
               </span>
@@ -268,7 +258,7 @@ export default function DossiersPage() {
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

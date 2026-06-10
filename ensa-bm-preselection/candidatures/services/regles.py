@@ -11,7 +11,7 @@ Ordre d'évaluation :
   3. DIPLOME_INVALIDE     — Conformité du diplôme avec les exigences
   4. ETABLISSEMENT_INVALIDE — Vérification de l'établissement d'origine
   5. MOYENNE_INSUFFISANTE — Seuil de moyenne générale
-  6. NOTE_ELIMINATOIRE    — Seuil plancher sur une matière spécifique
+  6. NOTE_ELIMINATOIRE    — Vérification semestres (rattrapages, mentions)
   7. DATE_INCOHERENTE     — Cohérence temporelle de l'année d'obtention
 """
 
@@ -23,7 +23,7 @@ from typing import Any
 
 from django.db.models import QuerySet
 
-from candidatures.models import Document, Dossier, NoteMatiere
+from candidatures.models import Document, Dossier, NoteSemestre
 from scoring.models import RegleRejet
 from administration.models import DiplomaAccepte
 
@@ -143,6 +143,9 @@ def _evaluer_diplome_invalide(
 
     diplome_candidat = dossier.diplome_obtenu.strip().lower()
 
+    if diplome_candidat.startswith("autre"):
+        return None
+
     # Récupérer tous les diplômes acceptés actifs pour cette filière
     diplomes_acceptes: QuerySet[DiplomaAccepte] = (
         DiplomaAccepte.objects.filter(
@@ -240,6 +243,10 @@ def _evaluer_moyenne_insuffisante(
     """
     Vérifie que la moyenne générale du candidat est supérieure ou égale
     au seuil défini dans le paramètre de la règle.
+
+    Supporte deux modes :
+    - Vérification de la moyenne_generale du dossier (champ global)
+    - Vérification de la moyenne des semestres (calculée à partir de NoteSemestre)
     """
     parametres: dict = regle.parametre or {}
     seuil = parametres.get("seuil")
@@ -251,88 +258,120 @@ def _evaluer_moyenne_insuffisante(
         )
         return None  # Règle mal configurée, on ne rejette pas
 
-    if dossier.moyenne_generale is None:
-        logger.warning(
-            "Dossier %s : MOYENNE_INSUFFISANTE — aucune moyenne déclarée.",
-            dossier.id,
-        )
-        return {
-            "rejete": True,
-            "motif": regle.message_rejet,
-            "regle": RegleRejet.TypeRegle.MOYENNE_INSUFFISANTE,
-        }
+    # Vérifier d'abord la moyenne générale déclarée du dossier
+    if dossier.moyenne_generale is not None:
+        if float(dossier.moyenne_generale) < float(seuil):
+            logger.info(
+                "Dossier %s : MOYENNE_INSUFFISANTE — %.2f < %.2f (seuil).",
+                dossier.id, float(dossier.moyenne_generale), float(seuil),
+            )
+            return {
+                "rejete": True,
+                "motif": regle.message_rejet,
+                "regle": RegleRejet.TypeRegle.MOYENNE_INSUFFISANTE,
+            }
+        return None
 
-    if float(dossier.moyenne_generale) < float(seuil):
-        logger.info(
-            "Dossier %s : MOYENNE_INSUFFISANTE — %.2f < %.2f (seuil).",
-            dossier.id, float(dossier.moyenne_generale), float(seuil),
-        )
-        return {
-            "rejete": True,
-            "motif": regle.message_rejet,
-            "regle": RegleRejet.TypeRegle.MOYENNE_INSUFFISANTE,
-        }
-    return None
+    # Fallback : calculer la moyenne à partir des notes semestrielles
+    notes_sem = NoteSemestre.objects.filter(dossier=dossier)
+    if notes_sem.exists():
+        moyenne_calculee = sum(float(n.moyenne) for n in notes_sem) / notes_sem.count()
+        if moyenne_calculee < float(seuil):
+            logger.info(
+                "Dossier %s : MOYENNE_INSUFFISANTE (semestres) — %.2f < %.2f (seuil).",
+                dossier.id, moyenne_calculee, float(seuil),
+            )
+            return {
+                "rejete": True,
+                "motif": regle.message_rejet,
+                "regle": RegleRejet.TypeRegle.MOYENNE_INSUFFISANTE,
+            }
+        return None
+
+    # Aucune donnée de moyenne disponible
+    logger.warning(
+        "Dossier %s : MOYENNE_INSUFFISANTE — aucune moyenne déclarée.",
+        dossier.id,
+    )
+    return {
+        "rejete": True,
+        "motif": regle.message_rejet,
+        "regle": RegleRejet.TypeRegle.MOYENNE_INSUFFISANTE,
+    }
 
 
 def _evaluer_note_eliminatoire(
     dossier: Dossier, regle: RegleRejet
 ) -> dict[str, Any] | None:
     """
-    Vérifie qu'aucune matière critique n'a une note inférieure
-    au seuil éliminatoire défini dans les paramètres.
+    Évalue les critères d'élimination basés sur les semestres :
+    
+    Paramètres supportés dans regle.parametre :
+    - max_rattrapages (int) : nombre maximum de semestres validés en rattrapage
+    - min_mentions (int) : nombre minimum de mentions ≥ ASSEZ_BIEN requises
+    - min_mentions_type (str) : type minimum de mention requis (défaut: ASSEZ_BIEN)
+    - matiere + seuil : ancienne logique de note éliminatoire par matière (ignorée)
     """
     parametres: dict = regle.parametre or {}
-    matiere_cible: str | None = parametres.get("matiere")
-    seuil = parametres.get("seuil")
 
-    if matiere_cible is None or seuil is None:
-        logger.error(
-            "Règle NOTE_ELIMINATOIRE de la filière '%s' : "
-            "paramètre 'matiere' et/ou 'seuil' manquant(s).",
-            dossier.filiere.code,
-        )
-        return None  # Règle mal configurée
+    notes_sem = NoteSemestre.objects.filter(dossier=dossier)
 
-    # Recherche insensible à la casse
-    try:
-        note_matiere = NoteMatiere.objects.get(
-            dossier=dossier,
-            matiere__iexact=matiere_cible.strip(),
-        )
-    except NoteMatiere.DoesNotExist:
-        # La matière n'existe pas dans le dossier → pas de rejet
-        # (le candidat ne suit peut-être pas cette matière)
+    if not notes_sem.exists():
+        # Pas de notes semestrielles, on ignore cette règle
         logger.info(
-            "Dossier %s : matière '%s' non trouvée, "
-            "règle NOTE_ELIMINATOIRE ignorée.", dossier.id, matiere_cible,
+            "Dossier %s : aucune note semestrielle, "
+            "règle NOTE_ELIMINATOIRE ignorée.", dossier.id,
         )
         return None
-    except NoteMatiere.MultipleObjectsReturned:
-        # En théorie impossible grâce à unique_together, mais par sécurité
-        logger.error(
-            "Dossier %s : doublons détectés pour la matière '%s'.",
-            dossier.id, matiere_cible,
-        )
-        note_matiere = NoteMatiere.objects.filter(
-            dossier=dossier,
-            matiere__iexact=matiere_cible.strip(),
-        ).first()
 
-    if note_matiere.note_declaree is None:
-        return None
+    # ── Critère 1 : Nombre maximum de rattrapages ──
+    max_rattrapages = parametres.get("max_rattrapages")
+    if max_rattrapages is not None:
+        nb_rattrapages = notes_sem.filter(session='RATTRAPAGE').count()
+        if nb_rattrapages > int(max_rattrapages):
+            motif = (
+                f"{regle.message_rejet} — "
+                f"Nombre de rattrapages ({nb_rattrapages}) supérieur "
+                f"au maximum autorisé ({max_rattrapages})."
+            )
+            logger.info(
+                "Dossier %s : NOTE_ELIMINATOIRE — %d rattrapages > %d max.",
+                dossier.id, nb_rattrapages, int(max_rattrapages),
+            )
+            return {
+                "rejete": True,
+                "motif": motif,
+                "regle": RegleRejet.TypeRegle.NOTE_ELIMINATOIRE,
+            }
 
-    if float(note_matiere.note_declaree) < float(seuil):
-        logger.info(
-            "Dossier %s : NOTE_ELIMINATOIRE — %s = %.2f < %.2f (seuil).",
-            dossier.id, matiere_cible,
-            float(note_matiere.note_declaree), float(seuil),
-        )
-        return {
-            "rejete": True,
-            "motif": regle.message_rejet,
-            "regle": RegleRejet.TypeRegle.NOTE_ELIMINATOIRE,
-        }
+    # ── Critère 2 : Nombre minimum de mentions requises ──
+    min_mentions = parametres.get("min_mentions")
+    if min_mentions is not None:
+        # Types de mentions acceptées (ASSEZ_BIEN ou mieux par défaut)
+        min_type = parametres.get("min_mentions_type", "ASSEZ_BIEN")
+        mentions_valides = ['TRES_BIEN', 'BIEN', 'ASSEZ_BIEN']
+        if min_type == 'BIEN':
+            mentions_valides = ['TRES_BIEN', 'BIEN']
+        elif min_type == 'TRES_BIEN':
+            mentions_valides = ['TRES_BIEN']
+
+        nb_mentions = notes_sem.filter(mention__in=mentions_valides).count()
+        if nb_mentions < int(min_mentions):
+            motif = (
+                f"{regle.message_rejet} — "
+                f"Nombre de mentions qualifiantes ({nb_mentions}) inférieur "
+                f"au minimum requis ({min_mentions})."
+            )
+            logger.info(
+                "Dossier %s : NOTE_ELIMINATOIRE — %d mentions < %d min.",
+                dossier.id, nb_mentions, int(min_mentions),
+            )
+            return {
+                "rejete": True,
+                "motif": motif,
+                "regle": RegleRejet.TypeRegle.NOTE_ELIMINATOIRE,
+            }
+
     return None
 
 

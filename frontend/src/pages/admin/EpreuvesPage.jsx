@@ -103,11 +103,11 @@ export default function EpreuvesPage() {
               <div className="p-5 bg-gray-50/50 flex-1 space-y-3">
                 <div className="flex items-center gap-3 text-sm text-gray-600">
                   <Calendar size={16} className="text-blue-500" />
-                  <span>Écrit : <span className="font-semibold text-gray-900">{ep.date_epreuve ? new Date(ep.date_epreuve).toLocaleDateString('fr-FR') : 'Non définie'}</span></span>
+                  <span>Écrit : <span className="font-semibold text-gray-900">{ep.date_ecrit ? new Date(ep.date_ecrit).toLocaleString('fr-FR') : 'Non définie'}</span></span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-gray-600">
                   <Calendar size={16} className="text-purple-500" />
-                  <span>Oral : <span className="font-semibold text-gray-900">{ep.date_oral ? new Date(ep.date_oral).toLocaleDateString('fr-FR') : 'Non définie'}</span></span>
+                  <span>Oral : <span className="font-semibold text-gray-900">{ep.date_oral ? new Date(ep.date_oral).toLocaleString('fr-FR') : 'Non définie'}</span></span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-gray-600">
                   <Settings2 size={16} className="text-gray-400" />
@@ -156,10 +156,6 @@ function CreateEpreuveModal({ filieres, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     nom: '',
     filiere: '',
-    date_epreuve: '',
-    date_oral: '',
-    lieu_oral: 'ENSA Béni Mellal',
-    heure_oral: '09:00',
     note_sur: 20,
     coefficient: 1,
     seuil_admission: 10
@@ -199,26 +195,6 @@ function CreateEpreuveModal({ filieres, onClose, onSuccess }) {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Nom de l'épreuve</label>
             <input required type="text" placeholder="Ex: Épreuve Écrite 2025" value={formData.nom} onChange={e => setFormData({...formData, nom: e.target.value})} className="w-full rounded-lg border-gray-300" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-               <label className="block text-sm font-semibold text-gray-700 mb-1">Date Écrit</label>
-               <input type="date" value={formData.date_epreuve} onChange={e => setFormData({...formData, date_epreuve: e.target.value})} className="w-full rounded-lg border-gray-300" />
-            </div>
-            <div>
-               <label className="block text-sm font-semibold text-gray-700 mb-1">Date Oral</label>
-               <input type="date" value={formData.date_oral} onChange={e => setFormData({...formData, date_oral: e.target.value})} className="w-full rounded-lg border-gray-300" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-               <label className="block text-sm font-semibold text-gray-700 mb-1">Lieu Oral</label>
-               <input type="text" value={formData.lieu_oral} onChange={e => setFormData({...formData, lieu_oral: e.target.value})} className="w-full rounded-lg border-gray-300" placeholder="Ex: Salle 5" />
-            </div>
-            <div>
-               <label className="block text-sm font-semibold text-gray-700 mb-1">Heure Oral</label>
-               <input type="text" value={formData.heure_oral} onChange={e => setFormData({...formData, heure_oral: e.target.value})} className="w-full rounded-lg border-gray-300" placeholder="Ex: 09:00" />
-            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

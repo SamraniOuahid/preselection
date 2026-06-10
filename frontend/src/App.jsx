@@ -15,6 +15,9 @@ import DashboardLayout from './layouts/DashboardLayout';
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
+const VerifyEmailPage = lazy(() => import('./pages/auth/VerifyEmailPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 
 // Pages candidat (Lazy loaded)
 const MesDossiers = lazy(() => import('./pages/candidat/MesDossiers'));
@@ -32,12 +35,18 @@ const DetailDossierPage = lazy(() => import('./pages/responsable/DetailDossierPa
 // Pages admin existantes (Lazy loaded)
 const GestionFilieres = lazy(() => import('./pages/admin/GestionFilieres'));
 const ConfigScoring = lazy(() => import('./pages/admin/ConfigScoring'));
+const AdminAnalyticsDashboard = lazy(() => import('./pages/responsable/AdminAnalyticsDashboard'));
 
 // Pages épreuves écrites (Lazy loaded)
 const EpreuvesPage = lazy(() => import('./pages/admin/EpreuvesPage'));
 const DetailEpreuvePage = lazy(() => import('./pages/admin/DetailEpreuvePage'));
 const ResultatsEpreuvePage = lazy(() => import('./pages/admin/ResultatsEpreuvePage'));
 const ResultatEcritPage = lazy(() => import('./pages/candidat/ResultatEcritPage'));
+
+// Pages épreuves orales (Lazy loaded)
+const EpreuveOralePage = lazy(() => import('./pages/admin/EpreuveOralePage'));
+const DetailEpreuveOralePage = lazy(() => import('./pages/admin/DetailEpreuveOralePage'));
+const ConvocationPage = lazy(() => import('./pages/candidat/ConvocationPage'));
 
 const PageLoader = () => (
   <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F6F9]">
@@ -73,6 +82,9 @@ export default function App() {
             <Route element={<PublicLayout />}>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
             </Route>
 
             {/* ── Routes protégées (dashboard layout) ── */}
@@ -140,6 +152,13 @@ export default function App() {
                 </ProtectedRoute>
               } />
 
+              {/* Analytics Dashboard */}
+              <Route path="/analytics" element={
+                <ProtectedRoute roles={['RESPONSABLE', 'ADMIN']}>
+                  <AdminAnalyticsDashboard />
+                </ProtectedRoute>
+              } />
+
               {/* Épreuves écrites — Admin / Responsable */}
               <Route path="/admin/epreuves" element={
                 <ProtectedRoute roles={['RESPONSABLE', 'ADMIN']}>
@@ -161,6 +180,25 @@ export default function App() {
               <Route path="/candidat/resultats-ecrit" element={
                 <ProtectedRoute roles={['CANDIDAT']}>
                   <ResultatEcritPage />
+                </ProtectedRoute>
+              } />
+
+              {/* Épreuves orales — Admin / Responsable */}
+              <Route path="/admin/epreuves-oral" element={
+                <ProtectedRoute roles={['RESPONSABLE', 'ADMIN']}>
+                  <EpreuveOralePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/epreuves-oral/:id" element={
+                <ProtectedRoute roles={['RESPONSABLE', 'ADMIN']}>
+                  <DetailEpreuveOralePage />
+                </ProtectedRoute>
+              } />
+
+              {/* Convocation — Candidat */}
+              <Route path="/candidat/convocation" element={
+                <ProtectedRoute roles={['CANDIDAT']}>
+                  <ConvocationPage />
                 </ProtectedRoute>
               } />
             </Route>

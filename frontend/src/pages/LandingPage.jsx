@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  UserPlus, FileText, Upload, Cpu, Award, Calendar,
+  UserPlus, FileText, Upload, Award, Calendar,
   ChevronRight, ChevronLeft, ChevronDown, GraduationCap, Users,
   FileCheck, Camera, CreditCard, BookOpen, ArrowRight,
   CheckCircle2, Sparkles, ClipboardList, HelpCircle
@@ -53,8 +53,8 @@ const SLIDES = [
   {
     img: '/hero-slide-2.png',
     tag: 'Présélection',
-    title: 'Présélection Intelligente & Automatisée',
-    subtitle: 'Analyse IA de votre dossier pour un traitement rapide et équitable',
+    title: 'Présélection rigoureuse et transparente',
+    subtitle: 'Votre dossier est étudié par la commission pédagogique de l\'ENSA',
   },
   {
     img: '/hero-slide-3.png',
@@ -72,20 +72,17 @@ const SERVICES = [
 ];
 
 const ETAPES = [
-  { num: 1, label: 'Inscription', desc: 'Créez votre compte candidat en quelques clics', Icon: UserPlus, color: '#2E86C1' },
-  { num: 2, label: 'Remplir le dossier', desc: 'Saisissez vos informations académiques', Icon: FileText, color: '#8E44AD' },
-  { num: 3, label: 'Upload documents', desc: 'Joignez vos justificatifs numérisés', Icon: Upload, color: '#E67E22' },
-  { num: 4, label: 'Analyse automatique', desc: 'Vérification IA et scoring intelligent', Icon: Cpu, color: '#27AE60' },
-  { num: 5, label: 'Résultat', desc: 'Consultez votre classement final', Icon: Award, color: '#C0392B' },
+  { num: 1, label: 'Inscription en ligne', desc: 'Créez votre compte candidat en quelques clics', Icon: UserPlus, color: '#2E86C1' },
+  { num: 2, label: 'Dépôt des pièces justificatives', desc: 'Saisissez vos informations et joignez vos documents officiels (PDF)', Icon: Upload, color: '#8E44AD' },
+  { num: 3, label: 'Étude du dossier', desc: 'Votre dossier est examiné par nos services pédagogiques', Icon: FileText, color: '#27AE60' },
+  { num: 4, label: 'Publication des résultats', desc: 'Consultez les résultats de présélection en ligne', Icon: Award, color: '#C0392B' },
 ];
 
 const FILIERES = [
-  { code: 'GI', nom: 'Génie Informatique', niveau: 'Bac+2', places: 40, ouvert: true },
-  { code: 'GE', nom: 'Génie Électrique', niveau: 'Bac+2', places: 35, ouvert: true },
-  { code: 'GC', nom: 'Génie Civil', niveau: 'Bac+2', places: 30, ouvert: true },
-  { code: 'GMI', nom: 'Génie Mécanique et Industriel', niveau: 'Bac+2', places: 30, ouvert: true },
-  { code: 'GI-L', nom: 'Génie Informatique (Licence)', niveau: 'Bac+3', places: 25, ouvert: true },
-  { code: 'GE-L', nom: 'Génie Électrique (Licence)', niveau: 'Bac+3', places: 20, ouvert: false },
+  { code: 'G2ER', nom: "Génie Électrique et Énergies Renouvelables", coordinateur: "Coordinateur : Pr. OULCAID MOSTAPHA", places: 30, ouvert: true },
+  { code: 'IAA', nom: "Industries Agroalimentaires", coordinateur: "Coordinateur : Pr. ROKNI YAHYA", places: 30, ouvert: true },
+  { code: 'IACS', nom: "Intelligence Artificielle et Cybersécurité", coordinateur: "Coordinateur : Pr. GOUSKIR MOHAMED", places: 35, ouvert: true },
+  { code: 'TDI', nom: "Transformation Digitale Industrielle", coordinateur: "Coordinateur : Pr. OUANAN HAMID", places: 40, ouvert: true },
 ];
 
 const ANNONCES = [
@@ -230,7 +227,7 @@ function ProcessSection() {
       <div ref={ref} className="ensa-container">
         <div className="ensa-section-header">
           <span className="ensa-badge-section">Comment ça marche</span>
-          <h2 className="ensa-section-title">Déposez votre candidature en <span className="ensa-text-gradient">5 étapes simples</span></h2>
+          <h2 className="ensa-section-title">Déposez votre candidature en <span className="ensa-text-gradient">4 étapes simples</span></h2>
           <p className="ensa-section-desc">Un processus entièrement dématérialisé, rapide et transparent</p>
         </div>
         <div className={`ensa-timeline ${inView ? 'is-visible' : ''}`}>
@@ -270,7 +267,8 @@ function FiliereColumn({ title, icon, data, accent }) {
               <span className="ensa-filiere-code" style={{ color: accent, background: accent + '15' }}>{f.code}</span>
               <div>
                 <div className="ensa-filiere-name">{f.nom}</div>
-                <div className="ensa-filiere-meta">
+                {f.coordinateur && <div className="text-xs text-text-secondary mt-1">{f.coordinateur}</div>}
+                <div className="ensa-filiere-meta mt-2">
                   <Users size={12} /><span>{f.places} places</span>
                   <span className={`ensa-filiere-status ${f.ouvert ? 'is-open' : 'is-closed'}`}>
                     {f.ouvert ? '● Ouvert' : '● Fermé'}
@@ -293,8 +291,8 @@ function FiliereColumn({ title, icon, data, accent }) {
 /* ── Section Filières ── */
 function FilieresSection() {
   const [ref, inView] = useInView();
-  const bac2 = FILIERES.filter(f => f.niveau === 'Bac+2');
-  const bac3 = FILIERES.filter(f => f.niveau === 'Bac+3');
+  const col1 = FILIERES.slice(0, 2);
+  const col2 = FILIERES.slice(2, 4);
 
   return (
     <section id="filieres" className="ensa-section ensa-section-gray">
@@ -302,11 +300,11 @@ function FilieresSection() {
         <div className="ensa-section-header">
           <span className="ensa-badge-section">Formations</span>
           <h2 className="ensa-section-title">Filières <span className="ensa-text-gradient">disponibles</span></h2>
-          <p className="ensa-section-desc">Consultez les filières ouvertes à la candidature pour la session 2025</p>
+          <p className="ensa-section-desc">Quatre filières spécialisées de 3 ans, accessibles à l'issue du cycle préparatoire ou par admission parallèle.</p>
         </div>
         <div className={`ensa-filieres-grid ${inView ? 'is-visible' : ''}`}>
-          <FiliereColumn title="Cycle Ingénieur — Bac+2" icon={<GraduationCap size={20} />} data={bac2} accent="#2E86C1" />
-          <FiliereColumn title="Cycle Ingénieur — Bac+3" icon={<GraduationCap size={20} />} data={bac3} accent="#8E44AD" />
+          <FiliereColumn title="Cycle Ingénieur" icon={<GraduationCap size={20} />} data={col1} accent="#2E86C1" />
+          <FiliereColumn title="Cycle Ingénieur" icon={<GraduationCap size={20} />} data={col2} accent="#8E44AD" />
         </div>
       </div>
     </section>
@@ -358,14 +356,26 @@ function StatItem({ value, suffix, label, inView }) {
 function StatsSection() {
   const [ref, inView] = useInView();
   const stats = [
-    { value: 1200, suffix: '+', label: 'Étudiants formés' },
-    { value: 8, suffix: '', label: 'Filières d\'ingénieur' },
-    { value: 95, suffix: '%', label: 'Taux d\'insertion' },
-    { value: 10, suffix: '+', label: 'Années d\'excellence' },
+    { value: 731, suffix: '+', label: 'Étudiants' },
+    { value: 35, suffix: '', label: 'Professeurs' },
+    { value: 10, suffix: '', label: 'Personnels' },
+    { value: 4, suffix: '', label: 'Formations' },
+    { value: 2, suffix: '', label: 'Laboratoires' },
   ];
   return (
     <section className="ensa-stats" ref={ref}>
       <div className="ensa-stats-overlay" />
+      <div className="ensa-container" style={{ position: 'relative', zIndex: 1, textAlign: 'center', marginBottom: '40px' }}>
+        <h2 className="ensa-section-title" style={{ color: '#fff' }}>
+          ENSABM en <span style={{ background: 'linear-gradient(135deg, #6DD5FA 0%, #FFFFFF 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>chiffres</span>
+        </h2>
+        <p className="ensa-section-desc" style={{ color: 'rgba(255,255,255,0.8)' }}>
+          L'École Nationale des Sciences Appliquées de Béni Mellal en quelques données clés.<br />
+          <span style={{ display: 'inline-block', marginTop: '12px', fontSize: '13px', fontWeight: 'bold', padding: '6px 16px', background: 'rgba(255,255,255,0.1)', borderRadius: '100px', border: '1px solid rgba(255,255,255,0.2)' }}>
+            Année académique 2024–2025
+          </span>
+        </p>
+      </div>
       <div className="ensa-container ensa-stats-inner">
         {stats.map((s, i) => (
           <StatItem key={i} value={s.value} suffix={s.suffix} label={s.label} inView={inView} />
@@ -410,7 +420,7 @@ function FaqSection() {
   const [ref, inView] = useInView();
   const faqs = [
     { q: 'Quels sont les diplômes acceptés pour le cycle Bac+2 ?', a: 'Les candidats titulaires d\'un DUT, BTS, DEUG, DEUST ou diplôme équivalent Bac+2 dans les domaines scientifiques et techniques sont éligibles.' },
-    { q: 'Comment fonctionne la présélection automatique ?', a: 'Les dossiers sont analysés automatiquement par notre système intelligent. Un score est calculé sur la base de vos notes et parcours académique. Les documents sont vérifiés par OCR.' },
+    { q: 'Comment fonctionne la présélection ?', a: 'Les dossiers sont examinés par la commission pédagogique de l\'ENSA sur la base des critères académiques définis dans le règlement du concours. Chaque dossier est évalué selon le parcours, les notes obtenues et la conformité des pièces fournies.' },
     { q: 'Puis-je modifier mon dossier après soumission ?', a: 'Non, une fois le dossier soumis, il ne peut plus être modifié. Assurez-vous de bien vérifier toutes les informations avant la soumission finale.' },
     { q: 'Quand seront publiés les résultats ?', a: 'Les résultats de présélection sont publiés progressivement. Vous recevrez une notification par email dès que votre dossier est traité.' },
     { q: 'Quels formats de documents sont acceptés ?', a: 'Les diplômes et relevés doivent être en PDF. La CIN peut être en PDF ou image (JPG, PNG). La photo d\'identité en JPG ou PNG. Max 5 Mo par document.' },

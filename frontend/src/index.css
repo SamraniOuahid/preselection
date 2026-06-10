@@ -454,6 +454,7 @@ textarea:focus-visible {
 @import './styles/landing-sections.css';
 @import './styles/landing-footer.css';
 @import './styles/dashboard.css';
+@import './styles/analytics.css';
 
 /* ── Text Gradient Utility (legacy — kept for dashboard) ── */
 .text-gradient {

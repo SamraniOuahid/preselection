@@ -29,7 +29,7 @@ export default function GestionFilieres() {
   const onSubmit = async (data) => {
     try {
       const diplomes_acceptes = data.diplomes_str
-        ? data.diplomes_str.split(',').map(s => s.trim()).filter(Boolean).map(name => ({ nom_diplome: name, is_active: true }))
+        ? data.diplomes_str.split(',').map(s => s.trim()).filter(Boolean).map(name => ({ nom_diplome: name, coefficient: 1.00, is_active: true }))
         : [];
 
       const payload = {
@@ -38,11 +38,10 @@ export default function GestionFilieres() {
         niveau: data.niveau,
         description: data.description,
         places_disponibles: parseInt(data.places_disponibles),
+        coef_autre_diplome: parseFloat(data.coef_autre_diplome || 0.80),
         date_ecrit: data.date_ecrit || null,
-        heure_ecrit: data.heure_ecrit || null,
         lieu_ecrit: data.lieu_ecrit || null,
         date_oral: data.date_oral || null,
-        heure_oral: data.heure_oral || null,
         lieu_oral: data.lieu_oral || null,
         diplomes_acceptes,
       };
@@ -67,13 +66,12 @@ export default function GestionFilieres() {
     setValue('nom', f.nom);
     setValue('code', f.code);
     setValue('niveau', f.niveau);
+    setValue('coef_autre_diplome', f.coef_autre_diplome || 0.80);
     setValue('description', f.description);
     setValue('places_disponibles', f.places_disponibles);
-    setValue('date_ecrit', f.date_ecrit || '');
-    setValue('heure_ecrit', f.heure_ecrit || '');
+    setValue('date_ecrit', f.date_ecrit ? f.date_ecrit.slice(0, 16) : '');
     setValue('lieu_ecrit', f.lieu_ecrit || '');
-    setValue('date_oral', f.date_oral || '');
-    setValue('heure_oral', f.heure_oral || '');
+    setValue('date_oral', f.date_oral ? f.date_oral.slice(0, 16) : '');
     setValue('lieu_oral', f.lieu_oral || '');
     
     const diplomesStr = f.diplomes_acceptes?.map(da => da.nom_diplome).join(', ') || '';
@@ -85,20 +83,21 @@ export default function GestionFilieres() {
       await API.post(`/filieres/${id}/toggle_status/`);
       fetchFilieres();
     } catch (err) {
-      console.error("Erreur lors du toggle status:", err);
+      // console.error("Erreur lors du toggle status:", err);
       alert("Erreur lors de la modification de l'état.");
     }
   };
 
-  const handleAddDiploma = async (filiereId, nomDiplome) => {
+  const handleAddDiploma = async (filiereId, nomDiplome, coefficient) => {
     try {
       await API.post(`/filieres/${filiereId}/ajouter_diplome/`, {
         nom_diplome: nomDiplome,
+        coefficient: parseFloat(coefficient || 1.00),
         is_active: true
       });
       fetchFilieres();
     } catch (err) {
-      console.error("Erreur lors de l'ajout du diplôme:", err);
+      // console.error("Erreur lors de l'ajout du diplôme:", err);
       alert("Erreur lors de l'ajout du diplôme.");
     }
   };
@@ -111,7 +110,7 @@ export default function GestionFilieres() {
       });
       fetchFilieres();
     } catch (err) {
-      console.error("Erreur lors du retrait du diplôme:", err);
+      // console.error("Erreur lors du retrait du diplôme:", err);
       alert("Erreur lors du retrait du diplôme.");
     }
   };
@@ -202,24 +201,28 @@ export default function GestionFilieres() {
                 {...register('places_disponibles', { required: 'Obligatoire', min: 1 })} 
               />
             </div>
+            
             <div>
-              <label className="label" htmlFor="filiere-date-ecrit">Date de l'épreuve écrite</label>
+              <label className="label" htmlFor="filiere-coef-autre">Coef. Diplômes "Autre"</label>
+              <input 
+                id="filiere-coef-autre"
+                type="number"
+                step="0.01"
+                min="0"
+                max="1"
+                className="input font-mono" 
+                placeholder="Ex: 0.80" 
+                {...register('coef_autre_diplome', { required: 'Obligatoire', min: 0, max: 1 })} 
+              />
+              {errors.coef_autre_diplome && <p className="error-text">{errors.coef_autre_diplome.message}</p>}
+            </div>
+            <div>
+              <label className="label" htmlFor="filiere-date-ecrit">Date et heure de l'épreuve écrite</label>
               <input 
                 id="filiere-date-ecrit"
-                type="date" 
+                type="datetime-local" 
                 className="input font-mono" 
                 {...register('date_ecrit')} 
-              />
-            </div>
-
-            <div>
-              <label className="label" htmlFor="filiere-heure-ecrit">Heure de l'épreuve écrite</label>
-              <input 
-                id="filiere-heure-ecrit"
-                type="text" 
-                className="input font-mono" 
-                placeholder="Ex: 09:00"
-                {...register('heure_ecrit')} 
               />
             </div>
 
@@ -234,23 +237,12 @@ export default function GestionFilieres() {
             </div>
 
             <div>
-              <label className="label" htmlFor="filiere-date-oral">Date de l'épreuve orale</label>
+              <label className="label" htmlFor="filiere-date-oral">Date et heure de l'épreuve orale</label>
               <input 
                 id="filiere-date-oral"
-                type="date" 
+                type="datetime-local" 
                 className="input font-mono" 
                 {...register('date_oral')} 
-              />
-            </div>
-
-            <div>
-              <label className="label" htmlFor="filiere-heure-oral">Heure de l'épreuve orale</label>
-              <input 
-                id="filiere-heure-oral"
-                type="text" 
-                className="input font-mono" 
-                placeholder="Ex: 09:00"
-                {...register('heure_oral')} 
               />
             </div>
 
@@ -344,18 +336,12 @@ export default function GestionFilieres() {
                   </div>
 
                   {/* Infos Concours Écrit */}
-                  {(f.date_ecrit || f.heure_ecrit || f.lieu_ecrit) && (
+                  {(f.date_ecrit || f.lieu_ecrit) && (
                     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs bg-blue-50/50 p-2.5 rounded-lg border border-blue-100/50 text-[#1B3A6B]">
                       {f.date_ecrit && (
                         <span className="flex items-center gap-1">
-                          <span className="font-bold text-[10px] uppercase tracking-wider text-[#3B6FE5]">Date écrit :</span>
-                          <span className="font-semibold">{new Date(f.date_ecrit).toLocaleDateString('fr-FR')}</span>
-                        </span>
-                      )}
-                      {f.heure_ecrit && (
-                        <span className="flex items-center gap-1">
-                          <span className="font-bold text-[10px] uppercase tracking-wider text-[#3B6FE5]">Heure :</span>
-                          <span className="font-semibold">{f.heure_ecrit}</span>
+                          <span className="font-bold text-[10px] uppercase tracking-wider text-[#3B6FE5]">Date & Heure :</span>
+                          <span className="font-semibold">{new Date(f.date_ecrit).toLocaleString('fr-FR')}</span>
                         </span>
                       )}
                       {f.lieu_ecrit && (
@@ -368,18 +354,12 @@ export default function GestionFilieres() {
                   )}
 
                   {/* Infos Concours Oral */}
-                  {(f.date_oral || f.heure_oral || f.lieu_oral) && (
+                  {(f.date_oral || f.lieu_oral) && (
                     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-xs bg-purple-50/50 p-2.5 rounded-lg border border-purple-100/50 text-[#5B21B6]">
                       {f.date_oral && (
                         <span className="flex items-center gap-1">
-                          <span className="font-bold text-[10px] uppercase tracking-wider text-[#7C3AED]">Date oral :</span>
-                          <span className="font-semibold">{new Date(f.date_oral).toLocaleDateString('fr-FR')}</span>
-                        </span>
-                      )}
-                      {f.heure_oral && (
-                        <span className="flex items-center gap-1">
-                          <span className="font-bold text-[10px] uppercase tracking-wider text-[#7C3AED]">Heure :</span>
-                          <span className="font-semibold">{f.heure_oral}</span>
+                          <span className="font-bold text-[10px] uppercase tracking-wider text-[#7C3AED]">Date & Heure :</span>
+                          <span className="font-semibold">{new Date(f.date_oral).toLocaleString('fr-FR')}</span>
                         </span>
                       )}
                       {f.lieu_oral && (
@@ -396,12 +376,12 @@ export default function GestionFilieres() {
                   <div className="mt-4 pt-3 border-t border-gray-100">
                     <div className="text-[11px] font-bold text-[#1B3A6B] mb-2 uppercase tracking-wide flex items-center gap-1.5">
                       <GraduationCap size={13} />
-                      Diplômes admis ({f.diplomes_acceptes?.length || 0}) :
+                      Diplômes admis ({f.diplomes_acceptes?.length || 0}) (Coef Autre: {f.coef_autre_diplome || '0.80'}) :
                     </div>
                     <div className="flex flex-wrap gap-2 items-center">
                       {f.diplomes_acceptes?.map((da) => (
                         <span key={da.id} className="inline-flex items-center gap-1 text-[11px] font-semibold bg-blue-50 text-[#1B3A6B] px-2.5 py-1 rounded-full border border-blue-100">
-                          {da.nom_diplome}
+                          {da.nom_diplome} (coeff: {da.coefficient})
                           <button
                             type="button"
                             onClick={() => handleRemoveDiploma(f.id, da.id)}
@@ -417,8 +397,9 @@ export default function GestionFilieres() {
                         onSubmit={(e) => {
                           e.preventDefault();
                           const val = e.target.diplome.value.trim();
+                          const coeff = e.target.coefficient.value.trim();
                           if (val) {
-                            handleAddDiploma(f.id, val);
+                            handleAddDiploma(f.id, val, coeff);
                             e.target.reset();
                           }
                         }}
@@ -427,8 +408,18 @@ export default function GestionFilieres() {
                         <input
                           name="diplome"
                           type="text"
-                          placeholder="Ajouter un diplôme..."
-                          className="input px-2.5 py-1 text-xs w-48 h-[28px] min-h-[28px] bg-gray-50 border-gray-200"
+                          placeholder="Nom diplôme..."
+                          className="input px-2.5 py-1 text-xs w-40 h-[28px] min-h-[28px] bg-gray-50 border-gray-200"
+                        />
+                        <input
+                          name="coefficient"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max="1"
+                          defaultValue="1.00"
+                          placeholder="Coef..."
+                          className="input px-2.5 py-1 text-xs w-20 h-[28px] min-h-[28px] bg-gray-50 border-gray-200"
                         />
                         <button type="submit" className="btn btn-primary px-3 h-[28px] min-h-[28px] text-[11px] flex items-center justify-center">
                           Ajouter

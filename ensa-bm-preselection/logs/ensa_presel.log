@@ -1,0 +1,251 @@
+INFO 2026-06-10 10:17:07,288 services Email envoyé à ouahidsamrani@gmail.com
+INFO 2026-06-10 10:17:08,496 services Email envoyé à ouahidsamrani@gmail.com
+INFO 2026-06-10 10:22:20,523 services Email envoyé à ideal@test.com
+INFO 2026-06-10 10:46:03,084 services Email envoyé à c1@ensa.ma
+INFO 2026-06-10 10:46:03,123 services Email envoyé à c2@ensa.ma
+INFO 2026-06-10 10:46:05,907 services Email envoyé à c1@ensa.ma
+INFO 2026-06-10 10:46:05,942 services Email envoyé à c2@ensa.ma
+INFO 2026-06-10 10:46:08,998 services Email envoyé à c1@ensa.ma
+INFO 2026-06-10 10:46:09,035 services Email envoyé à c2@ensa.ma
+INFO 2026-06-10 10:46:09,045 services Email envoyé à c1@ensa.ma
+INFO 2026-06-10 10:46:11,890 services Email envoyé à c1@ensa.ma
+INFO 2026-06-10 10:46:11,935 services Email envoyé à c2@ensa.ma
+INFO 2026-06-10 10:46:15,392 services Email envoyé à c1@ensa.ma
+INFO 2026-06-10 10:46:15,427 services Email envoyé à c2@ensa.ma
+INFO 2026-06-10 10:46:15,440 services Email envoyé à c1@ensa.ma
+INFO 2026-06-10 10:46:18,466 services Email envoyé à c1@ensa.ma
+INFO 2026-06-10 10:46:18,499 services Email envoyé à c2@ensa.ma
+INFO 2026-06-10 10:46:21,266 services Email envoyé à c1@ensa.ma
+INFO 2026-06-10 10:46:21,298 services Email envoyé à c2@ensa.ma
+INFO 2026-06-10 10:46:21,309 services Email envoyé à c1@ensa.ma
+INFO 2026-06-10 10:46:24,325 services Email envoyé à c1@ensa.ma
+INFO 2026-06-10 10:46:24,359 services Email envoyé à c2@ensa.ma
+ERROR 2026-06-10 11:22:10,882 log Internal Server Error: /api/epreuves-oral/07f9e638-de7f-4f32-8b59-460bd0814cf8/convoquer_admis/
+Traceback (most recent call last):
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 557, in thread_handler
+    raise exc_info[1]
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 557, in thread_handler
+    raise exc_info[1]
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/django/core/handlers/base.py", line 254, in _get_response_async
+    response = await wrapped_callback(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 506, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 561, in thread_handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/administration/views_oral.py", line 46, in convoquer_admis
+    heure_actuelle = epreuve.heure_debut
+                     ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'EpreuveOrale' object has no attribute 'heure_debut'
+ERROR 2026-06-10 11:22:10,894 runserver [35;1mHTTP POST /api/epreuves-oral/07f9e638-de7f-4f32-8b59-460bd0814cf8/convoquer_admis/ 500 [0.10, 127.0.0.1:49338][0m
+INFO 2026-06-10 11:36:40,875 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:36:53,610 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:37:23,553 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:37:29,227 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:37:35,052 services Email envoyé à C003@test.ma
+INFO 2026-06-10 11:37:40,680 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:37:40,714 services Email envoyé à C002@test.ma
+INFO 2026-06-10 11:37:46,166 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:37:46,204 services Email envoyé à C002@test.ma
+INFO 2026-06-10 11:37:46,245 services Email envoyé à C003@test.ma
+INFO 2026-06-10 11:46:15,168 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:46:28,218 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:46:59,802 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:47:06,213 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:47:12,889 services Email envoyé à C003@test.ma
+INFO 2026-06-10 11:47:19,704 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:47:19,756 services Email envoyé à C002@test.ma
+INFO 2026-06-10 11:47:26,155 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:47:26,202 services Email envoyé à C002@test.ma
+INFO 2026-06-10 11:47:26,250 services Email envoyé à C003@test.ma
+INFO 2026-06-10 11:47:54,779 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:48:01,449 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:48:01,499 services Email envoyé à C002@test.ma
+INFO 2026-06-10 11:48:15,229 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:48:28,880 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:49:00,379 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:49:06,931 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:49:13,811 services Email envoyé à C003@test.ma
+INFO 2026-06-10 11:49:20,369 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:49:20,414 services Email envoyé à C002@test.ma
+INFO 2026-06-10 11:49:26,935 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:49:26,980 services Email envoyé à C002@test.ma
+INFO 2026-06-10 11:49:27,028 services Email envoyé à C003@test.ma
+INFO 2026-06-10 11:49:33,321 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:49:39,962 services Email envoyé à C001@test.ma
+INFO 2026-06-10 11:49:40,010 services Email envoyé à C002@test.ma
+INFO 2026-06-10 12:08:47,954 services Email envoyé à ideal@test.com
+ERROR 2026-06-10 12:09:28,913 log Internal Server Error: /api/epreuves-oral/07f9e638-de7f-4f32-8b59-460bd0814cf8/enregistrer_decision/
+Traceback (most recent call last):
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 557, in thread_handler
+    raise exc_info[1]
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 557, in thread_handler
+    raise exc_info[1]
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/django/core/handlers/base.py", line 254, in _get_response_async
+    response = await wrapped_callback(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 506, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 561, in thread_handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/administration/views_oral.py", line 249, in enregistrer_decision
+    envoyer_notification(dossier, 'ORAL_ACCEPTE')
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/notifications/services.py", line 36, in envoyer_notification
+    contenu = _generer_contenu(dossier, type_notif)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/notifications/services.py", line 361, in _generer_contenu
+    'ADMIS_FINAL':  _generer_corps_admis_final(dossier, filiere),
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/notifications/services.py", line 223, in _generer_corps_admis_final
+    date_oral = epreuve.date_oral if epreuve and epreuve.date_oral else None
+                                                 ^^^^^^^^^^^^^^^^^
+AttributeError: 'EpreuveEcrite' object has no attribute 'date_oral'
+ERROR 2026-06-10 12:09:28,920 runserver HTTP POST /api/epreuves-oral/07f9e638-de7f-4f32-8b59-460bd0814cf8/enregistrer_decision/ 500 [0.06, 127.0.0.1:42464]
+ERROR 2026-06-10 12:09:34,189 log Internal Server Error: /api/epreuves-oral/07f9e638-de7f-4f32-8b59-460bd0814cf8/enregistrer_decision/
+Traceback (most recent call last):
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 557, in thread_handler
+    raise exc_info[1]
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 557, in thread_handler
+    raise exc_info[1]
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/django/core/handlers/base.py", line 254, in _get_response_async
+    response = await wrapped_callback(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 506, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 561, in thread_handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/administration/views_oral.py", line 249, in enregistrer_decision
+    envoyer_notification(dossier, 'ORAL_ACCEPTE')
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/notifications/services.py", line 36, in envoyer_notification
+    contenu = _generer_contenu(dossier, type_notif)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/notifications/services.py", line 361, in _generer_contenu
+    'ADMIS_FINAL':  _generer_corps_admis_final(dossier, filiere),
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/notifications/services.py", line 223, in _generer_corps_admis_final
+    date_oral = epreuve.date_oral if epreuve and epreuve.date_oral else None
+                                                 ^^^^^^^^^^^^^^^^^
+AttributeError: 'EpreuveEcrite' object has no attribute 'date_oral'
+ERROR 2026-06-10 12:09:34,196 runserver HTTP POST /api/epreuves-oral/07f9e638-de7f-4f32-8b59-460bd0814cf8/enregistrer_decision/ 500 [0.10, 127.0.0.1:42478]
+ERROR 2026-06-10 12:12:12,638 log Internal Server Error: /api/epreuves-oral/07f9e638-de7f-4f32-8b59-460bd0814cf8/enregistrer_decision/
+Traceback (most recent call last):
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 557, in thread_handler
+    raise exc_info[1]
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 557, in thread_handler
+    raise exc_info[1]
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/django/core/handlers/base.py", line 254, in _get_response_async
+    response = await wrapped_callback(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 506, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/asgiref/sync.py", line 561, in thread_handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/venv/lib/python3.12/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/administration/views_oral.py", line 249, in enregistrer_decision
+    envoyer_notification(dossier, 'ORAL_ACCEPTE')
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/notifications/services.py", line 36, in envoyer_notification
+    contenu = _generer_contenu(dossier, type_notif)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/notifications/services.py", line 361, in _generer_contenu
+    'ADMIS_FINAL':      lambda: _generer_corps_admis_final(dossier, filiere),
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ouahid/myproject/stage/preseclection/ensa-bm-preselection/notifications/services.py", line 223, in _generer_corps_admis_final
+    date_oral = epreuve.date_oral if epreuve and epreuve.date_oral else None
+                                                 ^^^^^^^^^^^^^^^^^
+AttributeError: 'EpreuveEcrite' object has no attribute 'date_oral'
+ERROR 2026-06-10 12:12:12,646 runserver HTTP POST /api/epreuves-oral/07f9e638-de7f-4f32-8b59-460bd0814cf8/enregistrer_decision/ 500 [0.06, 127.0.0.1:39506]

@@ -1,20 +1,24 @@
 # candidatures/serializers.py
 
 from rest_framework import serializers
-from .models import Dossier, Document, NoteMatiere
+from .models import Dossier, Document, NoteSemestre
 from users.serializers import CandidatSerializer
 from users.models import Candidat
 from administration.models import Filiere
 
 
-class NoteSerializer(serializers.ModelSerializer):
+class NoteSemestreSerializer(serializers.ModelSerializer):
+    """Sérialiseur pour les notes par semestre."""
+    session_label = serializers.CharField(source='get_session_display', read_only=True)
+    mention_label = serializers.CharField(source='get_mention_display', read_only=True)
+
     class Meta:
-        model  = NoteMatiere
+        model  = NoteSemestre
         fields = [
-            'id', 'matiere', 'note_declaree', 'note_extraite',
-            'ecart', 'is_suspect',
+            'id', 'semestre', 'moyenne', 'session', 'session_label',
+            'mention', 'mention_label',
         ]
-        read_only_fields = ['id', 'note_extraite', 'ecart', 'is_suspect']
+        read_only_fields = ['id', 'session_label', 'mention_label']
 
 
 class DocumentSerializer(serializers.ModelSerializer):
@@ -37,11 +41,11 @@ class DossierListSerializer(serializers.ModelSerializer):
     note_ecrite = serializers.SerializerMethodField()
     note_sur = serializers.SerializerMethodField()
     date_ecrit = serializers.SerializerMethodField()
+    lieu_ecrit = serializers.SerializerMethodField()
     date_oral = serializers.SerializerMethodField()
     statut_epreuve = serializers.SerializerMethodField()
     seuil_admission = serializers.SerializerMethodField()
     lieu_oral = serializers.SerializerMethodField()
-    heure_oral = serializers.SerializerMethodField()
 
     class Meta:
         model  = Dossier
@@ -51,8 +55,8 @@ class DossierListSerializer(serializers.ModelSerializer):
             'statut', 'score', 'classement', 'is_suspect',
             'moyenne_generale', 'date_soumission', 'created_at',
             'score_final', 'rang_final', 'note_ecrite', 'note_sur',
-            'date_ecrit', 'date_oral', 'statut_epreuve', 'seuil_admission',
-            'lieu_oral', 'heure_oral',
+            'date_ecrit', 'lieu_ecrit', 'date_oral', 'statut_epreuve', 'seuil_admission',
+            'lieu_oral',
         ]
 
     def get_note_ecrite(self, obj):
@@ -64,12 +68,13 @@ class DossierListSerializer(serializers.ModelSerializer):
         return float(note_obj.epreuve.note_sur) if note_obj else None
 
     def get_date_ecrit(self, obj):
-        note_obj = obj.notes_ecrits.first()
-        return note_obj.epreuve.date_epreuve if note_obj else None
+        return obj.filiere.date_ecrit
+
+    def get_lieu_ecrit(self, obj):
+        return obj.filiere.lieu_ecrit
 
     def get_date_oral(self, obj):
-        note_obj = obj.notes_ecrits.first()
-        return note_obj.epreuve.date_oral if note_obj else None
+        return obj.filiere.date_oral
 
     def get_statut_epreuve(self, obj):
         note_obj = obj.notes_ecrits.first()
@@ -80,12 +85,7 @@ class DossierListSerializer(serializers.ModelSerializer):
         return float(note_obj.epreuve.seuil_admission) if note_obj else None
 
     def get_lieu_oral(self, obj):
-        note_obj = obj.notes_ecrits.first()
-        return note_obj.epreuve.lieu_oral if note_obj else None
-
-    def get_heure_oral(self, obj):
-        note_obj = obj.notes_ecrits.first()
-        return note_obj.epreuve.heure_oral if note_obj else None
+        return obj.filiere.lieu_oral
 
 
 class CandidatDetailSerializer(serializers.ModelSerializer):
@@ -105,32 +105,35 @@ class DossierDetailSerializer(serializers.ModelSerializer):
     """Sérialiseur complet pour le détail d'un dossier."""
     candidat  = CandidatDetailSerializer(read_only=True)
     documents = DocumentSerializer(many=True, read_only=True)
-    notes     = NoteSerializer(many=True, read_only=True)
+    notes_semestres = NoteSemestreSerializer(many=True, read_only=True)
     filiere_nom  = serializers.CharField(source='filiere.nom', read_only=True)
     filiere_code = serializers.CharField(source='filiere.code', read_only=True)
+    filiere_niveau = serializers.CharField(source='filiere.niveau', read_only=True)
     total_candidats = serializers.SerializerMethodField()
     note_ecrite = serializers.SerializerMethodField()
     note_sur = serializers.SerializerMethodField()
     date_ecrit = serializers.SerializerMethodField()
+    lieu_ecrit = serializers.SerializerMethodField()
     date_oral = serializers.SerializerMethodField()
     statut_epreuve = serializers.SerializerMethodField()
     seuil_admission = serializers.SerializerMethodField()
     lieu_oral = serializers.SerializerMethodField()
-    heure_oral = serializers.SerializerMethodField()
 
     class Meta:
         model  = Dossier
         fields = [
             'id', 'candidat', 'filiere', 'filiere_nom', 'filiere_code',
+            'filiere_niveau',
             'statut', 'diplome_obtenu', 'etablissement_origine',
             'annee_obtention', 'mention', 'moyenne_generale',
+            'code_massar', 'cne',
             'score', 'classement', 'motif_rejet',
             'score_confiance_ocr', 'is_suspect',
-            'documents', 'notes',
+            'documents', 'notes_semestres',
             'date_soumission', 'created_at', 'updated_at', 'total_candidats',
             'score_final', 'rang_final', 'note_ecrite', 'note_sur',
-            'date_ecrit', 'date_oral', 'statut_epreuve', 'seuil_admission',
-            'lieu_oral', 'heure_oral',
+            'date_ecrit', 'lieu_ecrit', 'date_oral', 'statut_epreuve', 'seuil_admission',
+            'lieu_oral',
         ]
 
     def get_total_candidats(self, obj):
@@ -145,12 +148,13 @@ class DossierDetailSerializer(serializers.ModelSerializer):
         return float(note_obj.epreuve.note_sur) if note_obj else None
 
     def get_date_ecrit(self, obj):
-        note_obj = obj.notes_ecrits.first()
-        return note_obj.epreuve.date_epreuve if note_obj else None
+        return obj.filiere.date_ecrit
+
+    def get_lieu_ecrit(self, obj):
+        return obj.filiere.lieu_ecrit
 
     def get_date_oral(self, obj):
-        note_obj = obj.notes_ecrits.first()
-        return note_obj.epreuve.date_oral if note_obj else None
+        return obj.filiere.date_oral
 
     def get_statut_epreuve(self, obj):
         note_obj = obj.notes_ecrits.first()
@@ -161,45 +165,41 @@ class DossierDetailSerializer(serializers.ModelSerializer):
         return float(note_obj.epreuve.seuil_admission) if note_obj else None
 
     def get_lieu_oral(self, obj):
-        note_obj = obj.notes_ecrits.first()
-        return note_obj.epreuve.lieu_oral if note_obj else None
-
-    def get_heure_oral(self, obj):
-        note_obj = obj.notes_ecrits.first()
-        return note_obj.epreuve.heure_oral if note_obj else None
+        return obj.filiere.lieu_oral
 
 
 class DossierCreateUpdateSerializer(serializers.ModelSerializer):
     """Sérialiseur pour la création/modification d'un dossier."""
-    notes = NoteSerializer(many=True, required=False)
+    notes_semestres = NoteSemestreSerializer(many=True, required=False)
 
     class Meta:
         model  = Dossier
         fields = [
             'id', 'filiere', 'diplome_obtenu', 'etablissement_origine',
-            'annee_obtention', 'mention', 'moyenne_generale', 'notes',
+            'annee_obtention', 'mention', 'moyenne_generale', 'notes_semestres',
+            'code_massar', 'cne',
         ]
         read_only_fields = ['id']
 
     def create(self, validated_data):
-        notes_data = validated_data.pop('notes', [])
+        notes_data = validated_data.pop('notes_semestres', [])
         dossier = Dossier.objects.create(**validated_data)
         for note_data in notes_data:
-            NoteMatiere.objects.create(dossier=dossier, **note_data)
+            NoteSemestre.objects.create(dossier=dossier, **note_data)
         return dossier
 
     def update(self, instance, validated_data):
-        notes_data = validated_data.pop('notes', None)
+        notes_data = validated_data.pop('notes_semestres', None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
         if notes_data is not None:
-            # Mettre à jour ou créer les notes
+            # Mettre à jour ou créer les notes semestrielles
             for note_data in notes_data:
-                NoteMatiere.objects.update_or_create(
+                NoteSemestre.objects.update_or_create(
                     dossier=instance,
-                    matiere=note_data.get('matiere'),
+                    semestre=note_data.get('semestre'),
                     defaults=note_data,
                 )
         return instance

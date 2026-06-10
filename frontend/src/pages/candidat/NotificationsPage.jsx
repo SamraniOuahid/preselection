@@ -44,7 +44,7 @@ const TYPE_CONFIG = {
     Icon: XCircle,
     color: 'text-danger-600 bg-danger-50 border-danger-100',
     borderLeft: 'border-l-4 border-l-danger-500',
-    label: 'Rejet automatique',
+    label: 'Dossier non retenu',
   },
   REJET_MANUEL: {
     Icon: XCircle,
@@ -85,7 +85,7 @@ export default function NotificationsPage() {
       const list = Array.isArray(data) ? data : data?.results || [];
       setNotifications(list);
     } catch (err) {
-      console.error('Erreur chargement notifications:', err);
+      // console.error('Erreur chargement notifications:', err);
     } finally {
       setLoading(false);
     }
@@ -123,7 +123,7 @@ export default function NotificationsPage() {
         prev.map((n) => (n.id === id ? { ...n, lue: true, lue_le: new Date().toISOString() } : n))
       );
     } catch (err) {
-      console.error(err);
+      // console.error(err);
     }
   };
 
@@ -132,7 +132,7 @@ export default function NotificationsPage() {
       await marquerToutesLues();
       setNotifications((prev) => prev.map((n) => ({ ...n, lue: true })));
     } catch (err) {
-      console.error(err);
+      // console.error(err);
     }
   };
 

@@ -18,9 +18,6 @@ export default function DetailEpreuvePage() {
   const [loading, setLoading] = useState(true);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [isEditDatesOpen, setIsEditDatesOpen] = useState(false);
-  const [editDatesForm, setEditDatesForm] = useState({ date_epreuve: '', date_oral: '' });
-  const [updatingDates, setUpdatingDates] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -53,21 +50,6 @@ export default function DetailEpreuvePage() {
       toast.error(error.response?.data?.error || 'Erreur lors de la publication');
     } finally {
       setPublishing(false);
-    }
-  };
-
-  const handleUpdateDates = async (e) => {
-    e.preventDefault();
-    setUpdatingDates(true);
-    try {
-      await API.patch(`/epreuves/${id}/`, editDatesForm);
-      toast.success('Dates mises à jour avec succès.');
-      setIsEditDatesOpen(false);
-      fetchData();
-    } catch (error) {
-      toast.error('Erreur lors de la mise à jour des dates');
-    } finally {
-      setUpdatingDates(false);
     }
   };
 
@@ -107,37 +89,19 @@ export default function DetailEpreuvePage() {
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                <div className="flex justify-between items-center mb-4">
                   <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Informations</h3>
-                  <button 
-                     onClick={() => {
-                        setEditDatesForm({
-                           date_epreuve: epreuve.date_epreuve || '',
-                           date_oral: epreuve.date_oral || '',
-                           lieu_oral: epreuve.lieu_oral || '',
-                           heure_oral: epreuve.heure_oral || ''
-                        });
-                        setIsEditDatesOpen(true);
-                     }}
-                     className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
-                  >
-                     Modifier les dates
-                  </button>
                </div>
                <div className="space-y-3">
                   <div className="flex justify-between border-b border-gray-50 pb-2">
-                     <span className="text-gray-500 text-sm">Date Écrit</span>
-                     <span className="font-semibold text-blue-900 text-sm">{epreuve.date_epreuve ? new Date(epreuve.date_epreuve).toLocaleDateString('fr-FR') : '-'}</span>
+                     <span className="text-gray-500 text-sm">Date & Heure Écrit</span>
+                     <span className="font-semibold text-blue-900 text-sm">{epreuve.date_ecrit ? new Date(epreuve.date_ecrit).toLocaleString('fr-FR') : '-'}</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-50 pb-2">
-                     <span className="text-gray-500 text-sm">Date Oral</span>
-                     <span className="font-semibold text-purple-900 text-sm">{epreuve.date_oral ? new Date(epreuve.date_oral).toLocaleDateString('fr-FR') : '-'}</span>
+                     <span className="text-gray-500 text-sm">Date & Heure Oral</span>
+                     <span className="font-semibold text-purple-900 text-sm">{epreuve.date_oral ? new Date(epreuve.date_oral).toLocaleString('fr-FR') : '-'}</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-50 pb-2">
                      <span className="text-gray-500 text-sm">Lieu Oral</span>
                      <span className="font-semibold text-gray-900 text-sm">{epreuve.lieu_oral || '-'}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-gray-50 pb-2">
-                     <span className="text-gray-500 text-sm">Heure Oral</span>
-                     <span className="font-semibold text-gray-900 text-sm">{epreuve.heure_oral || '-'}</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-50 pb-2">
                      <span className="text-gray-500 text-sm">Notée sur</span>
@@ -261,67 +225,6 @@ export default function DetailEpreuvePage() {
         cancelText="Annuler"
         isDanger={false} // Bien que sérieux, c'est une action métier positive
       />
-
-      {isEditDatesOpen && (
-        <div className="fixed inset-0 bg-gray-900/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h2 className="text-xl font-bold text-gray-900">Modifier les dates</h2>
-              <button onClick={() => setIsEditDatesOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-lg">×</button>
-            </div>
-            
-            <form onSubmit={handleUpdateDates} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Date Écrit</label>
-                <input 
-                  type="date" 
-                  value={editDatesForm.date_epreuve} 
-                  onChange={e => setEditDatesForm({...editDatesForm, date_epreuve: e.target.value})} 
-                  className="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500" 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Date Oral</label>
-                <input 
-                  type="date" 
-                  value={editDatesForm.date_oral} 
-                  onChange={e => setEditDatesForm({...editDatesForm, date_oral: e.target.value})} 
-                  className="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500" 
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Lieu Oral</label>
-                  <input 
-                    type="text" 
-                    value={editDatesForm.lieu_oral} 
-                    onChange={e => setEditDatesForm({...editDatesForm, lieu_oral: e.target.value})} 
-                    className="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500" 
-                    placeholder="Ex: Amphi A"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Heure Oral</label>
-                  <input 
-                    type="text" 
-                    value={editDatesForm.heure_oral} 
-                    onChange={e => setEditDatesForm({...editDatesForm, heure_oral: e.target.value})} 
-                    className="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500" 
-                    placeholder="Ex: 09:00"
-                  />
-                </div>
-              </div>
-              
-              <div className="pt-4 flex justify-end gap-3 border-t border-gray-100">
-                <button type="button" onClick={() => setIsEditDatesOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Annuler</button>
-                <button type="submit" disabled={updatingDates} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center gap-2">
-                  {updatingDates && <span className="animate-spin leading-none">⟳</span>} Enregistrer
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

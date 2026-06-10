@@ -13,13 +13,14 @@ import {
   Users, Plus, Trash2, CheckCircle, Home, FolderOpen, FileText,
   Calendar, MapPin, Clock
 } from 'lucide-react';
+import SemestreForm from '../../components/candidat/SemestreForm';
 
 const STEPS = [
   { label: 'Filière' },
-  { label: 'Académique' },
+  { label: 'Informations' },
   { label: 'Notes' },
-  { label: 'Documents' },
-  { label: 'Récapitulatif' },
+  { label: 'Téléversement' },
+  { label: 'Soumission' },
 ];
 
 const REQUIRED_DOCS = ['DIPLOME', 'RELEVE', 'CIN', 'PHOTO'];
@@ -29,14 +30,29 @@ export default function CandidaturePage() {
   const [step, setStep] = useState(1);
   const [filieres, setFilieres] = useState([]);
   const [selectedFiliere, setSelectedFiliere] = useState(null);
-  const [notes, setNotes] = useState([{ matiere: '', note_declaree: '' }]);
+  const [notesSemestres, setNotesSemestres] = useState([]);
+  
+  useEffect(() => {
+    if (selectedFiliere) {
+      const nbSemestres = selectedFiliere.niveau === 'BAC3' ? 6 : 4;
+      setNotesSemestres(Array.from({ length: nbSemestres }, (_, i) => ({
+        semestre: `S${i + 1}`,
+        moyenne: '',
+        session: 'NORMALE',
+        mention: 'PASSABLE'
+      })));
+    } else {
+      setNotesSemestres([]);
+    }
+  }, [selectedFiliere]);
   const [files, setFiles] = useState({ DIPLOME: null, RELEVE: null, CIN: null, PHOTO: null });
   const [certifie, setCertifie] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { register, formState: { errors }, getValues, trigger } = useForm();
+  const { register, formState: { errors }, getValues, trigger, watch } = useForm();
+  const watchedDiplome = watch('diplome_obtenu');
 
   useEffect(() => {
     API.get('/filieres/').then(({ data }) => {
@@ -45,10 +61,8 @@ export default function CandidaturePage() {
     });
   }, []);
 
-  const addNote = () => setNotes([...notes, { matiere: '', note_declaree: '' }]);
-  const removeNote = (i) => setNotes(notes.filter((_, idx) => idx !== i));
-  const updateNote = (i, field, val) => {
-    const u = [...notes]; u[i][field] = val; setNotes(u);
+  const updateNoteSemestre = (i, field, val) => {
+    const u = [...notesSemestres]; u[i][field] = val; setNotesSemestres(u);
   };
   const missingDocs = REQUIRED_DOCS.filter((k) => !files[k]);
   const formatNiveau = (niveau) => (
@@ -57,8 +71,18 @@ export default function CandidaturePage() {
 
   const goNext = async () => {
     if (step === 1 && !selectedFiliere) { setError('Veuillez sélectionner une filière.'); return; }
-    if (step === 2) { const v = await trigger(['diplome_obtenu','etablissement_origine','annee_obtention','moyenne_generale']); if (!v) return; }
-    if (step === 3 && notes.filter(n => n.matiere && n.note_declaree).length === 0) { setError('Ajoutez au moins une note.'); return; }
+    if (step === 2) { 
+      const fields = ['diplome_obtenu', 'etablissement_origine', 'annee_obtention', 'moyenne_generale', 'code_massar', 'cne'];
+      if (getValues('diplome_obtenu') === 'Autre') {
+        fields.push('diplome_obtenu_autre');
+      }
+      const v = await trigger(fields); 
+      if (!v) return; 
+    }
+    if (step === 3) {
+      if (notesSemestres.some(n => !n.moyenne)) { setError('Veuillez remplir toutes les moyennes semestrielles.'); return; }
+      if (notesSemestres.some(n => parseFloat(n.moyenne) < 10 || parseFloat(n.moyenne) > 20)) { setError('Les moyennes doivent être comprises entre 10 et 20.'); return; }
+    }
     if (step === 4 && missingDocs.length > 0) { setError('Veuillez uploader tous les documents obligatoires.'); return; }
     setError(''); setStep(Math.min(step + 1, 5));
   };
@@ -74,15 +98,16 @@ export default function CandidaturePage() {
         return;
       }
       const data = getValues();
-      const validNotes = notes.filter((n) => n.matiere && n.note_declaree);
       const payload = {
         filiere: selectedFiliere.id,
-        diplome_obtenu: data.diplome_obtenu,
+        diplome_obtenu: data.diplome_obtenu === 'Autre' ? `Autre: ${data.diplome_obtenu_autre}` : data.diplome_obtenu,
         etablissement_origine: data.etablissement_origine,
         annee_obtention: parseInt(data.annee_obtention),
         mention: data.mention || '',
         moyenne_generale: parseFloat(data.moyenne_generale),
-        notes: validNotes.map((n) => ({ matiere: n.matiere, note_declaree: parseFloat(n.note_declaree) })),
+        code_massar: data.code_massar,
+        cne: data.cne,
+        notes_semestres: notesSemestres.map(n => ({ ...n, moyenne: parseFloat(n.moyenne) })),
       };
       const { data: dossier } = await API.post('/dossiers/', payload);
       for (const [type, file] of Object.entries(files)) {
@@ -93,12 +118,15 @@ export default function CandidaturePage() {
         }
       }
       await API.post(`/dossiers/${dossier.id}/soumettre/`);
+      setLoading(false);
+      setShowConfirm(false);
       navigate(`/dossier/${dossier.id}`);
     } catch (err) {
       const msg = err.response?.data?.error || err.response?.data?.detail || 'Erreur lors de la création.';
       setError(typeof msg === 'object' ? JSON.stringify(msg) : msg);
       setShowConfirm(false);
-    } finally { setLoading(false); }
+      setLoading(false);
+    }
   };
 
   return (
@@ -155,26 +183,26 @@ export default function CandidaturePage() {
                         <Calendar size={13} style={{ flexShrink: 0, color: '#3B6FE5' }} />
                         <div>
                           <div style={{ fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#3B6FE5' }}>Épreuve Écrite</div>
-                          <div style={{ fontWeight: 600 }}>{ep.date_ecrit || <span style={{ color: '#94a3b8' }}>Non définie</span>}</div>
+                          <div style={{ fontWeight: 600 }}>{ep.date_ecrit ? new Date(ep.date_ecrit).toLocaleDateString('fr-FR') : <span style={{ color: '#94a3b8' }}>Non définie</span>}</div>
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#1B3A6B' }}>
                         <Calendar size={13} style={{ flexShrink: 0, color: '#7C3AED' }} />
                         <div>
                           <div style={{ fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#7C3AED' }}>Épreuve Orale</div>
-                          <div style={{ fontWeight: 600 }}>{ep.date_oral || <span style={{ color: '#94a3b8' }}>Non définie</span>}</div>
+                          <div style={{ fontWeight: 600 }}>{ep.date_oral ? new Date(ep.date_oral).toLocaleDateString('fr-FR') : <span style={{ color: '#94a3b8' }}>Non définie</span>}</div>
                         </div>
                       </div>
                       
                       {/* Détails Écrit / Oral de la filière */}
-                      {(ep.heure_ecrit || ep.lieu_ecrit || ep.heure_oral || ep.lieu_oral) && (
+                      {(ep.date_ecrit || ep.lieu_ecrit || ep.date_oral || ep.lieu_oral) && (
                         <div style={{ gridColumn: '1 / -1', borderTop: '1px dashed #c7d7f9', paddingTop: '8px', marginTop: '4px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: '#4b5563' }}>
                           {/* Écrit details */}
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            {ep.heure_ecrit && (
+                            {ep.date_ecrit && (
                               <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <Clock size={11} style={{ color: '#3B6FE5' }} />
-                                <strong>Heure écit :</strong> {ep.heure_ecrit}
+                                <strong>Heure écrit :</strong> {new Date(ep.date_ecrit).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             )}
                             {ep.lieu_ecrit && (
@@ -187,10 +215,10 @@ export default function CandidaturePage() {
                           
                           {/* Oral details */}
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            {ep.heure_oral && (
+                            {ep.date_oral && (
                               <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <Clock size={11} style={{ color: '#7C3AED' }} />
-                                <strong>Heure oral :</strong> {ep.heure_oral}
+                                <strong>Heure oral :</strong> {new Date(ep.date_oral).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             )}
                             {ep.lieu_oral && (
@@ -236,7 +264,18 @@ export default function CandidaturePage() {
             <div className="ensa-form-grid">
               <div>
                 <label className="label">Diplôme obtenu</label>
-                <input className={`input ${errors.diplome_obtenu ? 'input-error' : ''}`} placeholder="DUT Informatique" {...register('diplome_obtenu', { required: 'Obligatoire' })} />
+                <select 
+                  className={`input ${errors.diplome_obtenu ? 'input-error' : ''}`}
+                  {...register('diplome_obtenu', { required: 'Obligatoire' })}
+                >
+                  <option value="">— Choisir un diplôme —</option>
+                  {selectedFiliere?.diplomes_acceptes?.map((da) => (
+                    <option key={da.id} value={da.nom_diplome}>
+                      {da.nom_diplome}
+                    </option>
+                  ))}
+                  <option value="Autre">Autre diplôme (saisie libre)</option>
+                </select>
                 {errors.diplome_obtenu && <p className="error-text">{errors.diplome_obtenu.message}</p>}
               </div>
               <div>
@@ -245,6 +284,24 @@ export default function CandidaturePage() {
                 {errors.etablissement_origine && <p className="error-text">{errors.etablissement_origine.message}</p>}
               </div>
             </div>
+
+            {watchedDiplome === 'Autre' && (
+              <div className="ensa-form-grid" style={{ gridTemplateColumns: '1fr' }}>
+                <div>
+                  <label className="label">Précisez l'intitulé de votre diplôme</label>
+                  <input 
+                    className={`input ${errors.diplome_obtenu_autre ? 'input-error' : ''}`} 
+                    placeholder="Ex: DUT Chimie" 
+                    {...register('diplome_obtenu_autre', { required: 'Obligatoire pour les diplômes non répertoriés' })} 
+                  />
+                  {errors.diplome_obtenu_autre && <p className="error-text">{errors.diplome_obtenu_autre.message}</p>}
+                  <p className="text-[11px] text-amber-600 mt-1 font-medium">
+                    ⚠️ Note : L'utilisation d'un diplôme hors de la liste officielle peut faire l'objet d'une pondération différente (coefficient réduit).
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="ensa-form-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
               <div>
                 <label className="label">Année d'obtention</label>
@@ -270,6 +327,21 @@ export default function CandidaturePage() {
                 {errors.moyenne_generale && <p className="error-text">{errors.moyenne_generale.message}</p>}
               </div>
             </div>
+
+            <div className="ensa-form-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+              <div>
+                <label className="label">Code Massar</label>
+                <input className={`input font-mono ${errors.code_massar ? 'input-error' : ''}`} placeholder="R123456789"
+                  {...register('code_massar', { required: 'Obligatoire' })} />
+                {errors.code_massar && <p className="error-text">{errors.code_massar.message}</p>}
+              </div>
+              <div>
+                <label className="label">CNE</label>
+                <input className={`input font-mono ${errors.cne ? 'input-error' : ''}`} placeholder="1234567890"
+                  {...register('cne', { required: 'Obligatoire' })} />
+                {errors.cne && <p className="error-text">{errors.cne.message}</p>}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -279,28 +351,19 @@ export default function CandidaturePage() {
         <div className="ensa-form-section animate-fade-in">
           <div className="ensa-page-header-row ensa-mb-5">
             <div>
-              <h2 className="ensa-section-title">Notes par matière</h2>
-              <p className="ensa-section-desc" style={{ marginBottom: 0 }}>Saisissez vos notes</p>
+              <h2 className="ensa-section-title">Résultats par semestre</h2>
+              <p className="ensa-section-desc" style={{ marginBottom: 0 }}>Saisissez vos résultats globaux pour chaque semestre</p>
             </div>
-            <button type="button" className="btn btn-outline btn-sm" onClick={addNote}><Plus size={14} /> Ajouter</button>
           </div>
-          <div className="ensa-notes-list">
-            {notes.map((note, i) => (
-              <div key={i} className="ensa-note-row">
-                <input className="input flex-[2]" placeholder="Nom de la matière" value={note.matiere} onChange={(e) => updateNote(i, 'matiere', e.target.value)} />
-                <input type="number" step="0.01" min="0" max="20" className="input font-mono flex-1" placeholder="/20" value={note.note_declaree} onChange={(e) => updateNote(i, 'note_declaree', e.target.value)} />
-                {notes.length > 1 && <button type="button" className="btn btn-ghost btn-sm text-danger-500" onClick={() => removeNote(i)}><Trash2 size={14} /></button>}
-              </div>
-            ))}
-          </div>
+          <SemestreForm notesSemestres={notesSemestres} onUpdateNote={updateNoteSemestre} />
         </div>
       )}
 
       {/* Étape 4 — Documents */}
       {step === 4 && (
         <div className="ensa-form-section animate-fade-in">
-          <h2 className="ensa-section-title">Documents à joindre</h2>
-          <p className="ensa-section-desc">Uploadez vos justificatifs (PDF ou image)</p>
+          <h2 className="ensa-section-title">Téléversement des pièces justificatives</h2>
+          <p className="ensa-section-desc">Veuillez vous assurer que les documents téléversés sont lisibles et conformes à vos originaux. Tout dossier non conforme sera rejeté.</p>
           <div className="ensa-grid-2">
             <FileDropZone label="Diplôme" accept={{ 'application/pdf': ['.pdf'] }} file={files.DIPLOME} onFileSelected={(f) => setFiles({ ...files, DIPLOME: f })} onRemove={() => setFiles({ ...files, DIPLOME: null })} hint="PDF — Max 5 Mo" />
             <FileDropZone label="Relevé de notes" accept={{ 'application/pdf': ['.pdf'] }} file={files.RELEVE} onFileSelected={(f) => setFiles({ ...files, RELEVE: f })} onRemove={() => setFiles({ ...files, RELEVE: null })} hint="PDF — Max 5 Mo" />
@@ -324,18 +387,24 @@ export default function CandidaturePage() {
           <div className="ensa-recap-section">
             <h3 className="ensa-card-section-title"><FileText size={16} /> Académique</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-              {[['Diplôme', getValues('diplome_obtenu')], ['Établissement', getValues('etablissement_origine')], ['Année', getValues('annee_obtention')], ['Mention', getValues('mention') || '—'], ['Moyenne', `${getValues('moyenne_generale')}/20`]].map(([l, v]) => (
+              {[['Diplôme', getValues('diplome_obtenu') === 'Autre' ? getValues('diplome_obtenu_autre') : getValues('diplome_obtenu')], ['Établissement', getValues('etablissement_origine')], ['Année', getValues('annee_obtention')], ['Mention', getValues('mention') || '—'], ['Moyenne', `${getValues('moyenne_generale')}/20`]].map(([l, v]) => (
                 <div key={l}><span className="text-text-muted text-xs">{l}</span><div className="font-medium mt-0.5">{v || '—'}</div></div>
               ))}
             </div>
           </div>
           <div className="ensa-recap-section">
-            <h3 className="ensa-card-section-title">Notes</h3>
-            {notes.filter(n => n.matiere && n.note_declaree).map((n, i) => (
-              <div key={i} className="ensa-recap-notes-item">
-                <span>{n.matiere}</span><span className="font-mono font-semibold text-primary-700">{n.note_declaree}/20</span>
-              </div>
-            ))}
+            <h3 className="ensa-card-section-title">Résultats Semestriels</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {notesSemestres.map((n, i) => (
+                <div key={i} className="flex justify-between items-center p-2 bg-gray-50 rounded border border-gray-100">
+                  <span className="font-bold text-primary-700">{n.semestre}</span>
+                  <div className="text-right">
+                    <span className="font-mono font-semibold text-primary-700 block">{n.moyenne}/20</span>
+                    <span className="text-[10px] text-text-muted">{n.session === 'NORMALE' ? 'Normale' : 'Rattrapage'} • {n.mention}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="ensa-recap-section">
             <h3 className="ensa-card-section-title">Documents</h3>

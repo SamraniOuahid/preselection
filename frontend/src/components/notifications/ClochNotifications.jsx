@@ -45,7 +45,7 @@ export default function ClochNotifications() {
   const fetchUnreadCount = useCallback(() => {
     getNonLuesCount()
       .then(({ count }) => setCount(count))
-      .catch((err) => console.error('[WS] Erreur chargement badge:', err));
+      .catch((err) => { /* console.error('[WS] Erreur chargement badge:', err) */ });
   }, []);
 
   const loadNotifications = useCallback(() => {
@@ -56,7 +56,7 @@ export default function ClochNotifications() {
         const list = Array.isArray(data) ? data : data?.results || [];
         setNotifications(list.slice(0, 10));
       })
-      .catch((err) => console.error('[WS] Erreur chargement list notif:', err));
+      .catch((err) => { /* console.error('[WS] Erreur chargement list notif:', err) */ });
   }, []);
 
   // Sync au montage + Polling toutes les 60 secondes
@@ -94,7 +94,7 @@ export default function ClochNotifications() {
       setCount(0);
       setNotifications((prev) => prev.map((n) => ({ ...n, lue: true })));
     } catch (err) {
-      console.error(err);
+      // console.error(err);
     }
   };
 
@@ -107,7 +107,7 @@ export default function ClochNotifications() {
         await marquerLue(item.id);
         fetchUnreadCount();
       } catch (err) {
-        console.error(err);
+        // console.error(err);
       }
     }
 
@@ -121,7 +121,7 @@ export default function ClochNotifications() {
           navigate(`/dossier/${dossiers[0].id}`);
         }
       } catch (err) {
-        console.error('Erreur redirection dossier:', err);
+        // console.error('Erreur redirection dossier:', err);
       }
     } else {
       navigate('/candidat/notifications');

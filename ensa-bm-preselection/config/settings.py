@@ -145,6 +145,11 @@ CHANNEL_LAYERS = {
     },
 }
 
+import os
+
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -155,25 +160,32 @@ LOGGING = {
         },
     },
     'handlers': {
-        'console': {
-            'class':     'logging.StreamHandler',
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': LOGS_DIR / 'ensa_presel.log',
             'formatter': 'verbose',
         },
     },
     'loggers': {
-        'notifications': {
-            'handlers':  ['console'],
-            'level':     'DEBUG',
+        'django': {
+            'handlers': ['file'],
+            'level': 'ERROR',
             'propagate': True,
         },
-        'django.request': {
-            'handlers':  ['console'],
-            'level':     'ERROR',
-            'propagate': False,
+        'candidatures': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'notifications': {
+            'handlers':  ['file'],
+            'level':     'INFO',
+            'propagate': True,
         },
         'channels': {
-            'handlers':  ['console'],
-            'level':     'DEBUG',
+            'handlers':  ['file'],
+            'level':     'INFO',
             'propagate': True,
         },
     },

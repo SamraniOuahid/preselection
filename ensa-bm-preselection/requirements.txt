@@ -43,3 +43,5 @@ ujson==5.12.1
 zope.interface==8.5
 reportlab==4.5.1
 
+fuzzywuzzy==0.18.0
+python-Levenshtein==0.27.3

@@ -19,6 +19,9 @@ TEMPLATES_SUJET = {
     'COMPLEMENT':   "📎 Complément de document demandé",
     'ADMIS_FINAL':  "🎓 Félicitations — Vous êtes admis(e) à l'ENSA BM",
     'RECALE_FINAL': "Résultats épreuve écrite — ENSA Béni Mellal",
+    'CONVOCATION_ORAL': "Convocation à l'entretien oral — ENSA BM",
+    'ORAL_ACCEPTE': "🎓 Félicitations — Vous êtes admis(e) à l'ENSA Béni Mellal !",
+    'ORAL_REFUSE': "Résultat entretien oral — ENSA BM",
 }
 
 
@@ -308,6 +311,34 @@ def _generer_corps_recale_final(dossier, filiere):
     """
 
 
+def _generer_corps_convocation_oral(dossier, filiere):
+    return f"""
+    <p>Nous avons le plaisir de vous informer que vous êtes <strong>convoqué(e)</strong> à passer un entretien oral dans le cadre du concours d'accès.</p>
+    <p>Votre convocation officielle est disponible dans votre espace candidat.</p>
+    <p>Veuillez l'imprimer et la présenter le jour J avec les documents suivants en <strong>original</strong> :</p>
+    <ul>
+        <li>Baccalauréat (original + copie certifiée)</li>
+        <li>Diplôme obtenu (DUT/BTS/Licence) original</li>
+        <li>Relevés de notes officiels (toutes années)</li>
+        <li>CIN originale (recto-verso)</li>
+    </ul>
+    <p><strong>Présentez-vous 15 minutes avant l'heure indiquée.</strong></p>
+    """
+
+def _generer_corps_oral_accepte(dossier, filiere):
+    annee = timezone.now().year
+    return f"""
+    <p>Suite à votre entretien oral, nous avons le plaisir de vous informer de votre <strong>admission définitive</strong> à l'ENSA Béni Mellal pour la filière {filiere.nom} ({annee}-{annee+1}).</p>
+    <p>Veuillez vous présenter au service scolarité pour finaliser votre inscription avec les documents originaux requis.</p>
+    <p>Félicitations et bienvenue à l'ENSA BM !</p>
+    """
+
+def _generer_corps_oral_refuse(dossier, filiere):
+    return f"""
+    <p>Suite à l'entretien oral, nous regrettons de vous informer que votre candidature n'a pas été retenue cette année pour la filière {filiere.nom}.</p>
+    <p>Nous vous remercions pour l'intérêt que vous avez porté à l'ENSA Béni Mellal et vous souhaitons beaucoup de succès dans vos projets futurs.</p>
+    """
+
 def _generer_contenu(dossier, type_notif):
     candidat = dossier.candidat
     filiere = dossier.filiere
@@ -321,15 +352,20 @@ def _generer_contenu(dossier, type_notif):
         <p>Bonjour <strong>{candidat.nom_complet}</strong>,</p>
     """
 
-    corps = {
-        'SOUMISSION':   f"<p>Votre dossier pour la filière <strong>{filiere.nom}</strong> a bien été reçu et est en cours d'examen.</p>",
-        'REJET_AUTO':   f"<p>Après analyse automatique, votre dossier ne répond pas aux critères d'éligibilité.</p><p><strong>Motif :</strong> {dossier.motif_rejet}</p>",
-        'REJET_MANUEL': "<p>Après examen de votre dossier, votre candidature n'a pas été retenue.</p>",
-        'PRESELECTION': f"<p>Nous avons le plaisir de vous informer que vous êtes <strong>présélectionné(e)</strong> pour la filière <strong>{filiere.nom}</strong>.</p><p>Score obtenu : <strong>{dossier.score}/20</strong></p>",
-        'INCOMPLET':    "<p>Votre dossier est incomplet. Veuillez vous connecter pour compléter les documents manquants.</p>",
-        'ADMIS_FINAL':  _generer_corps_admis_final(dossier, filiere),
-        'RECALE_FINAL': _generer_corps_recale_final(dossier, filiere),
+    _corps_builders = {
+        'SOUMISSION':       lambda: f"<p>Votre dossier pour la filière <strong>{filiere.nom}</strong> a bien été reçu et est en cours d'examen.</p>",
+        'REJET_AUTO':       lambda: f"<p>Après analyse automatique, votre dossier ne répond pas aux critères d'éligibilité.</p><p><strong>Motif :</strong> {dossier.motif_rejet}</p>",
+        'REJET_MANUEL':     lambda: "<p>Après examen de votre dossier, votre candidature n'a pas été retenue.</p>",
+        'PRESELECTION':     lambda: f"<p>Nous avons le plaisir de vous informer que vous êtes <strong>présélectionné(e)</strong> pour la filière <strong>{filiere.nom}</strong>.</p><p>Score obtenu : <strong>{dossier.score}/20</strong></p>",
+        'INCOMPLET':        lambda: "<p>Votre dossier est incomplet. Veuillez vous connecter pour compléter les documents manquants.</p>",
+        'ADMIS_FINAL':      lambda: _generer_corps_admis_final(dossier, filiere),
+        'RECALE_FINAL':     lambda: _generer_corps_recale_final(dossier, filiere),
+        'CONVOCATION_ORAL': lambda: _generer_corps_convocation_oral(dossier, filiere),
+        'ORAL_ACCEPTE':     lambda: _generer_corps_oral_accepte(dossier, filiere),
+        'ORAL_REFUSE':      lambda: _generer_corps_oral_refuse(dossier, filiere),
     }
+    builder = _corps_builders.get(type_notif)
+    corps = {type_notif: builder() if builder else ''}
 
     fin = """
         <p style="color:#666; font-size:12px; margin-top:32px">

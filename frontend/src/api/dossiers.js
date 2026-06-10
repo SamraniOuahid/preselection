@@ -31,15 +31,8 @@ export const exportDossiers = () =>
 /**
  * Récupérer le rapport de vérification automatique d'un dossier
  * @param {string|number} dossierId - ID du dossier
- * @returns {Promise} Rapport contenant score_authenticite, alertes, par_document, massar_verifie
+ * @returns {Promise} Rapport contenant score_authenticite, alertes, par_document
  */
 export const getRapportVerification = (dossierId) =>
   API.get(`/dossiers/${dossierId}/rapport_verification/`).then((r) => r.data);
 
-/**
- * Marquer un dossier comme vérifié via le portail Massar
- * @param {string|number} dossierId - ID du dossier
- * @returns {Promise} Message de confirmation
- */
-export const marquerMassarVerifie = (dossierId) =>
-  API.post(`/dossiers/${dossierId}/marquer_massar_verifie/`).then((r) => r.data);

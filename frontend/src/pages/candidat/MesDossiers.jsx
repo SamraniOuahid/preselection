@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import API from '../../api/axios';
 import StatusBadge from '../../components/common/StatusBadge';
 import {
-  Plus, Calendar, BarChart3, Trophy, AlertTriangle,
+  Plus, Calendar, BarChart3, Trophy,
   ArrowRight, FolderOpen
 } from 'lucide-react';
 
@@ -91,11 +91,6 @@ export default function MesDossiers() {
                       <BarChart3 size={12} /> Moyenne: <span className="font-mono font-medium text-text-primary">{d.moyenne_generale}/20</span>
                     </span>
                   )}
-                  {d.score && (
-                    <span className="flex items-center gap-1">
-                      <Trophy size={12} /> Score: <span className="font-mono font-medium text-primary-700">{d.score}</span>
-                    </span>
-                  )}
                   {d.classement && (
                     <span className="flex items-center gap-1 font-medium text-text-primary">
                       #{d.classement}
@@ -116,11 +111,6 @@ export default function MesDossiers() {
                     </Link>
                   )}
                   <StatusBadge statut={d.statut} size="sm" />
-                  {d.is_suspect && (
-                    <span className="badge badge-suspect text-[10px]">
-                      <AlertTriangle size={10} /> Suspect
-                    </span>
-                  )}
                 </div>
                 <ArrowRight size={16} className="text-text-muted hidden sm:block" />
               </div>

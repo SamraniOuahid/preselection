@@ -1,0 +1,153 @@
+/* ═══ ANALYTICS DASHBOARD — ENSA BM ═══ */
+
+.ensa-analytics-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── KPI Cards ── */
+.ensa-analytics-kpi {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.ensa-analytics-kpi::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--kpi-accent, #2E86C1);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.ensa-analytics-kpi:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-3px);
+}
+
+.ensa-analytics-kpi:hover::before { opacity: 1; }
+
+.ensa-analytics-kpi-inner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.ensa-analytics-kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #5D6D7E;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.ensa-analytics-kpi-value {
+  font-family: var(--font-family-display);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ensa-analytics-kpi-suffix {
+  font-size: 16px;
+  font-weight: 600;
+  margin-left: 2px;
+  opacity: 0.7;
+}
+
+.ensa-analytics-kpi-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ensa-analytics-kpi-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.ensa-analytics-kpi-alert {
+  margin-top: 10px;
+  padding: 6px 10px;
+  background: #FEF2F2;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #E74C3C;
+  animation: analytics-pulse 2s ease-in-out infinite;
+}
+
+@keyframes analytics-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ── Section Cards ── */
+.ensa-analytics-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.ensa-analytics-section:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.ensa-analytics-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.ensa-analytics-section-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #EBF5FB, #D6EAF8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2E86C1;
+}
+
+.ensa-analytics-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A2E;
+  font-family: var(--font-family-display);
+}
+
+.ensa-analytics-section-body {
+  padding: 20px 24px;
+}
+
+.ensa-analytics-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #2E86C1;
+  background: #EBF5FB;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}

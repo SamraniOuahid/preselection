@@ -43,8 +43,25 @@ ETABLISSEMENTS = [
     'ENCG Settat', 'FST Errachidia', 'EST Safi',
 ]
 
-DIPLOMES_BAC2 = ['DUT Informatique', 'DUT Génie Électrique', 'DUT Génie Civil', 'DEUST MIP', 'DEUST SMI']
-DIPLOMES_BAC3 = ['Licence Informatique', 'Licence Mathématiques', 'Licence Physique', 'Licence Génie Civil']
+# Catalogue officiel synchronisé avec seed_diplomes
+DIPLOMES_BAC2 = [
+    ("DEUG SMA",                         "1.00"),
+    ("DEUG SMI",                         "1.00"),
+    ("DEUG SMP",                         "1.00"),
+    ("DEUG SMC",                         "0.95"),
+    ("DUT (EST)",                        "1.00"),
+    ("BTS Filières industrielles",       "1.00"),
+    ("BTS Filières techniques",          "1.00"),
+    ("DTS (OFPPT) Filières techniques",  "0.95"),
+]
+DIPLOMES_BAC3 = [
+    ("Licence d'Études Fondamentales - LEF (Filières scientifiques)", "1.00"),
+    ("Licence Professionnelle - LP (Filières techniques/ingénierie)", "1.00"),
+    ("Bachelor",                                                       "0.95"),
+]
+# Noms seuls pour usage aléatoire dans les dossiers
+DIPLOMES_BAC2_NOMS = [n for n, _ in DIPLOMES_BAC2]
+DIPLOMES_BAC3_NOMS = [n for n, _ in DIPLOMES_BAC3]
 
 MATIERES_GI = ['Mathématiques', 'Informatique', 'Physique', 'Anglais', 'Français']
 MATIERES_GE = ['Mathématiques', 'Physique', 'Électronique', 'Anglais', 'Français']
@@ -153,11 +170,14 @@ class Command(BaseCommand):
 
     def _create_diplomes(self, filieres):
         for f in filieres:
-            diplomes = DIPLOMES_BAC2 if f.niveau == 'BAC2' else DIPLOMES_BAC3
-            for nom in diplomes:
+            catalogue = DIPLOMES_BAC2 if f.niveau == 'BAC2' else DIPLOMES_BAC3
+            coef_autre = '0.80'
+            f.coef_autre_diplome = coef_autre
+            f.save(update_fields=['coef_autre_diplome'])
+            for nom_diplome, coefficient in catalogue:
                 DiplomaAccepte.objects.get_or_create(
-                    filiere=f, nom_diplome=nom,
-                    defaults={'is_active': True, 'etablissements': []},
+                    filiere=f, nom_diplome=nom_diplome,
+                    defaults={'coefficient': coefficient, 'is_active': True, 'etablissements': []},
                 )
 
     def _create_regles(self, filieres):
@@ -239,7 +259,7 @@ class Command(BaseCommand):
 
                 # Choisir une filière aléatoire
                 filiere = random.choice(filieres)
-                diplomes = DIPLOMES_BAC2 if filiere.niveau == 'BAC2' else DIPLOMES_BAC3
+                diplomes = DIPLOMES_BAC2_NOMS if filiere.niveau == 'BAC2' else DIPLOMES_BAC3_NOMS
                 mention = random.choice(mentions)
 
                 # Moyenne réaliste selon le statut

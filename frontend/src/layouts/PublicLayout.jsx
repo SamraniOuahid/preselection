@@ -73,15 +73,8 @@ export default function PublicLayout() {
             <img 
               src="/ensa_logo.png" 
               alt="ENSA BM" 
-              className="h-12 w-auto object-contain rounded-lg transition-transform duration-300 group-hover:scale-105" 
-              style={{ filter: 'brightness(1.1)' }} 
+              className="h-16 w-auto object-contain bg-white p-1.5 rounded-xl shadow-md transition-transform duration-300 group-hover:scale-105" 
             />
-            <div>
-              <div className="text-white font-bold text-base tracking-wide transition-colors group-hover:text-primary-200">
-                ENSA Béni Mellal
-              </div>
-              <div className="text-white/40 text-xs">Université Sultan Moulay Slimane</div>
-            </div>
           </Link>
         </div>
 
@@ -142,7 +135,7 @@ export default function PublicLayout() {
 
         {/* Footer branding */}
         <div className="relative z-10 text-white/25 text-xs">
-          © 2025 ENSA Béni Mellal — Tous droits réservés
+          © {new Date().getFullYear()} ENSA Béni Mellal — Tous droits réservés
         </div>
       </div>
 
@@ -151,10 +144,8 @@ export default function PublicLayout() {
         {/* Logo mobile */}
         <div className="lg:hidden mb-8 text-center animate-fade-in">
           <Link to="/" className="flex items-center justify-center gap-3 no-underline mb-2">
-            <img src="/ensa_logo.png" alt="ENSA BM" className="h-10 w-auto object-contain" />
-            <span className="text-primary-700 font-bold text-lg">ENSA BM</span>
+            <img src="/ensa_logo.png" alt="ENSA BM" className="h-12 w-auto object-contain bg-white p-1 rounded-md shadow-sm" />
           </Link>
-          <p className="text-text-muted text-xs">Portail de Présélection</p>
         </div>
 
         <div className="w-full max-w-[440px]">

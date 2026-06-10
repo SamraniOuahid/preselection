@@ -6,9 +6,7 @@
 @media(max-width:480px){.ensa-footer-grid{grid-template-columns:1fr}}
 
 .ensa-footer-brand{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-.ensa-footer-logo{height:40px;width:auto;object-fit:contain;border-radius:6px}
-.ensa-footer-brand-name{font-size:14px;font-weight:700;color:#fff}
-.ensa-footer-brand-uni{font-size:10px;color:rgba(255,255,255,.4)}
+.ensa-footer-logo{height:52px;width:auto;object-fit:contain;background-color:#ffffff;padding:3px;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
 .ensa-footer-desc{font-size:13px;line-height:1.7;color:rgba(255,255,255,.45)}
 
 .ensa-footer-heading{font-size:14px;font-weight:700;color:#fff;margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px}

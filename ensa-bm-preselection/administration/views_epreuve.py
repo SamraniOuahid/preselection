@@ -48,7 +48,7 @@ class EpreuveEcriteViewSet(viewsets.ModelViewSet):
     """
     permission_classes = [IsResponsableOrAdmin]
     filterset_fields = ['filiere', 'statut']
-    ordering_fields = ['created_at', 'date_epreuve', 'nom']
+    ordering_fields = ['created_at', 'nom']
     ordering = ['-created_at']
 
     def get_queryset(self):

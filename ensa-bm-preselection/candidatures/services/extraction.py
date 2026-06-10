@@ -5,8 +5,10 @@ Service d'extraction automatique des notes depuis les relevés PDF.
 Stratégie :
   1. Extraction texte natif via pdfplumber (rapide, précis)
   2. Fallback OCR via pytesseract si le texte est vide ou de mauvaise qualité
-  3. Parsing des notes avec expressions régulières
-  4. Comparaison avec les notes déclarées pour détecter les fraudes
+  3. Nettoyage du bruit OCR (lettres confondues avec des chiffres)
+  4. Parsing des notes avec expressions régulières
+  5. Regroupement des notes par catégorie via fuzzy matching
+  6. Comparaison avec les notes déclarées pour détecter les fraudes
 """
 
 from __future__ import annotations
@@ -32,7 +34,15 @@ except ImportError:  # pragma: no cover - optional dependency
 
 from django.db import transaction
 
-from candidatures.models import Document, Dossier, NoteMatiere
+from candidatures.models import Document, Dossier, NoteSemestre
+from candidatures.services.fuzzy_matching import (
+    nettoyer_bruit_ocr_note,
+    nettoyer_texte_matiere,
+    identifier_categorie,
+    regrouper_notes_par_categorie,
+    calculer_score_pondere_filiere,
+    CATEGORIES_MATIERES,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,21 +59,26 @@ SEUIL_ECART_SUSPECT: float = 0.5
 PATTERNS_NOTE: list[re.Pattern] = [
     # Format : Matière ... note /20
     re.compile(
-        r"(?P<matiere>[A-ZÀ-Üa-zà-ü\s\-\'\.]+?)"   # nom matière
-        r"\s*[:\.\s…]+\s*"                            # séparateur
-        r"(?P<note>\d{1,2}[.,]\d{1,2})"              # note décimale
-        r"\s*/?\s*(?:20)?"                            # optionnel /20
+        r"(?P<matiere>[A-ZÀ-Üa-zà-ü\s\-\'\.\d]+?)"   # nom matière
+        r"\s*[:\.\s…]+\s*"                             # séparateur
+        r"(?P<note>\d{1,2}[.,]\d{1,2})"               # note décimale
+        r"\s*/?\s*(?:20)?"                             # optionnel /20
     ),
     # Format : note /20 Matière (tableaux inversés)
     re.compile(
         r"(?P<note>\d{1,2}[.,]\d{1,2})"
         r"\s*/?\s*20\s+"
-        r"(?P<matiere>[A-ZÀ-Üa-zà-ü\s\-\'\.]+)"
+        r"(?P<matiere>[A-ZÀ-Üa-zà-ü\s\-\'\.\d]+)"
     ),
 ]
 
-# Matières courantes pour filtrer les faux positifs
-MATIERES_CONNUES: set[str] = {
+# Matières connues pour filtrer les faux positifs (élargi avec les nouvelles
+# catégories du fuzzy matching)
+MATIERES_CONNUES: set[str] = set()
+for _termes in CATEGORIES_MATIERES.values():
+    MATIERES_CONNUES.update(_termes)
+# Ajouter des termes supplémentaires historiques
+MATIERES_CONNUES.update({
     "mathématiques", "math", "maths", "physique", "chimie",
     "informatique", "français", "anglais", "physique-chimie",
     "analyse", "algèbre", "mécanique", "thermodynamique",
@@ -71,7 +86,7 @@ MATIERES_CONNUES: set[str] = {
     "optique", "svt", "sciences de la vie", "philosophie",
     "economie", "gestion", "comptabilité", "droit",
     "langue", "communication", "management",
-}
+})
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -81,18 +96,18 @@ MATIERES_CONNUES: set[str] = {
 
 def _normaliser_matiere(raw: str) -> str:
     """Nettoie et normalise le nom d'une matière extraite."""
-    matiere = raw.strip()
-    # Supprimer les séparateurs résiduels en début/fin
-    matiere = re.sub(r"^[\s\.\-:…]+|[\s\.\-:…]+$", "", matiere)
-    # Réduire les espaces multiples
-    matiere = re.sub(r"\s+", " ", matiere)
-    return matiere
+    return nettoyer_texte_matiere(raw)
 
 
 def _parser_note(valeur: str) -> Decimal | None:
-    """Convertit une chaîne de note en Decimal, gère virgule et point."""
+    """
+    Convertit une chaîne de note en Decimal, gère virgule, point
+    et bruit OCR (lettres confondues avec des chiffres).
+    """
     try:
-        valeur_normalisee = valeur.replace(",", ".")
+        # Appliquer le nettoyage du bruit OCR sur la valeur numérique
+        valeur_nettoyee = nettoyer_bruit_ocr_note(valeur)
+        valeur_normalisee = valeur_nettoyee.replace(",", ".")
         note = Decimal(valeur_normalisee)
         # Valider la plage [0, 20]
         if Decimal("0") <= note <= Decimal("20"):
@@ -103,15 +118,29 @@ def _parser_note(valeur: str) -> Decimal | None:
 
 
 def _est_matiere_valide(nom: str) -> bool:
-    """Vérifie si le nom ressemble à une matière scolaire connue."""
+    """
+    Vérifie si le nom ressemble à une matière scolaire connue.
+
+    Utilise le fuzzy matching pour accepter les noms bruités
+    (ex: "Algebme" → reconnu via fuzzy match sur "Algèbre").
+    """
     nom_lower = nom.lower().strip()
-    # Vérification directe
+
+    # Vérification directe dans les matières connues
     if nom_lower in MATIERES_CONNUES:
         return True
+
     # Vérification partielle (ex: "Mathématiques Appliquées" contient "mathématiques")
     for connue in MATIERES_CONNUES:
         if connue in nom_lower or nom_lower in connue:
             return True
+
+    # Vérification par fuzzy matching → la matière est identifiable dans
+    # une catégorie connue
+    categorie, score = identifier_categorie(nom)
+    if categorie is not None:
+        return True
+
     # Accepter si le nom a au moins 3 caractères alphabétiques
     # (filtrer les artefacts OCR comme "1.", "a)", etc.)
     if len(re.sub(r"[^a-zA-ZÀ-ü]", "", nom)) >= 3:
@@ -183,6 +212,9 @@ def _extraire_notes_depuis_texte(texte: str) -> dict[str, Decimal]:
     """
     Parse le texte extrait pour en tirer les couples (matière, note).
 
+    Intègre le nettoyage du bruit OCR et la validation par fuzzy
+    matching des noms de matières.
+
     Args:
         texte: Texte brut issu de l'extraction PDF ou OCR.
 
@@ -234,17 +266,19 @@ def _calculer_score_confiance(
 @transaction.atomic
 def extraire_donnees_dossier(dossier: Dossier) -> dict[str, Any]:
     """
-    Extrait automatiquement les notes depuis les relevés PDF d'un dossier
-    et les compare aux notes déclarées par le candidat.
+    Extrait automatiquement les notes depuis les relevés PDF d'un dossier,
+    les regroupe par catégorie via fuzzy matching, et calcule un score
+    pondéré par filière si applicable.
 
     Processus :
       1. Récupère tous les documents de type RELEVE liés au dossier
       2. Pour chaque PDF :
          - Essaie pdfplumber (texte natif)
          - Si échec ou confiance faible → fallback OCR (Tesseract)
-      3. Parse les notes extraites
-      4. Compare avec les NoteMatiere déclarées
-      5. Marque les écarts suspects
+      3. Nettoie le bruit OCR et parse les notes extraites
+      4. Regroupe les notes par catégorie (MATH, INFO, etc.) via fuzzy matching
+      5. Calcule le score pondéré par filière (TDI, IACS, IAA, G2ER)
+      6. Marque le dossier pour vérification manuelle si des catégories manquent
 
     Args:
         dossier: Instance du modèle Dossier à analyser.
@@ -254,6 +288,9 @@ def extraire_donnees_dossier(dossier: Dossier) -> dict[str, Any]:
           - succes (bool): True si l'extraction a fonctionné
           - notes_extraites (int): Nombre de notes trouvées
           - score_confiance (float): Ratio notes trouvées / attendues
+          - categories (dict): Notes regroupées par catégorie
+          - score_filiere (dict | None): Score pondéré par filière
+          - verification_manuelle (bool): True si fallback utilisé
           - erreur (str | None): Message d'erreur le cas échéant
     """
     logger.info(
@@ -266,6 +303,9 @@ def extraire_donnees_dossier(dossier: Dossier) -> dict[str, Any]:
         "succes": False,
         "notes_extraites": 0,
         "score_confiance": 0.0,
+        "categories": {},
+        "score_filiere": None,
+        "verification_manuelle": False,
         "erreur": None,
     }
 
@@ -346,66 +386,56 @@ def extraire_donnees_dossier(dossier: Dossier) -> dict[str, Any]:
             dossier.id, len(notes_trouvees)
         )
 
-        # ── Étape 4 : Comparer avec les notes déclarées ──
-        notes_declarees = NoteMatiere.objects.filter(dossier=dossier)
-        notes_attendues = notes_declarees.count()
+        # ── Étape 4 : Regrouper par catégorie via fuzzy matching ──
+        categories = regrouper_notes_par_categorie(notes_trouvees)
+        resultat["categories"] = categories
 
-        dossier_suspect = False
+        logger.info(
+            "Dossier %s : %d catégories identifiées — %s",
+            dossier.id, len(categories), list(categories.keys()),
+        )
 
-        for note_obj in notes_declarees:
-            matiere_lower = note_obj.matiere.lower().strip()
+        # ── Étape 5 : Calculer le score pondéré par filière ──
+        code_filiere = dossier.filiere.code if dossier.filiere else None
+        moyenne_generale = None
 
-            # Chercher la correspondance dans les notes extraites
-            note_extraite_val: Decimal | None = None
+        # Calculer la moyenne générale depuis les semestres (fallback)
+        notes_semestres = NoteSemestre.objects.filter(dossier=dossier)
+        if notes_semestres.exists():
+            moyenne_generale = (
+                sum(float(n.moyenne) for n in notes_semestres)
+                / notes_semestres.count()
+            )
+        elif dossier.moyenne_generale is not None:
+            moyenne_generale = float(dossier.moyenne_generale)
 
-            # Correspondance exacte
-            if matiere_lower in notes_trouvees:
-                note_extraite_val = notes_trouvees[matiere_lower]
-            else:
-                # Correspondance partielle (ex: "math" dans "mathématiques")
-                for matiere_extraite, note_val in notes_trouvees.items():
-                    if (
-                        matiere_lower in matiere_extraite
-                        or matiere_extraite in matiere_lower
-                    ):
-                        note_extraite_val = note_val
-                        break
+        if code_filiere and categories:
+            score_filiere = calculer_score_pondere_filiere(
+                categories, code_filiere, moyenne_generale
+            )
+            resultat["score_filiere"] = score_filiere
+            resultat["verification_manuelle"] = score_filiere.get(
+                "verification_manuelle", False
+            )
 
-            if note_extraite_val is not None:
-                # Mettre à jour la note extraite dans la base
-                note_obj.note_extraite = note_extraite_val
+            if resultat["verification_manuelle"]:
+                logger.warning(
+                    "Dossier %s : catégories manquantes (%s), "
+                    "dossier marqué pour VÉRIFICATION_MANUELLE.",
+                    dossier.id,
+                    score_filiere.get("categories_manquantes", []),
+                )
 
-                # Calculer l'écart si la note déclarée existe
-                if note_obj.note_declaree is not None:
-                    ecart = abs(
-                        float(note_obj.note_declaree) - float(note_extraite_val)
-                    )
-                    note_obj.ecart = Decimal(str(round(ecart, 2)))
-                    note_obj.is_suspect = ecart > SEUIL_ECART_SUSPECT
-
-                    if note_obj.is_suspect:
-                        dossier_suspect = True
-                        logger.warning(
-                            "Dossier %s — matière '%s' : écart suspect "
-                            "de %.2f (déclarée=%.2f, extraite=%.2f)",
-                            dossier.id, note_obj.matiere,
-                            ecart, note_obj.note_declaree, note_extraite_val,
-                        )
-
-                note_obj.save()
-
-        # ── Étape 5 : Mettre à jour le dossier ──
+        # ── Étape 6 : Mettre à jour le dossier ──
+        notes_attendues = notes_semestres.count()
         score_confiance = _calculer_score_confiance(
-            len(notes_trouvees), notes_attendues
+            len(notes_trouvees), max(notes_attendues, 1)
         )
         dossier.score_confiance_ocr = Decimal(str(round(score_confiance, 2)))
-        dossier.is_suspect = dossier_suspect
 
-        if dossier_suspect:
-            logger.info(
-                "Dossier %s marqué comme SUSPECT (écarts détectés).",
-                dossier.id,
-            )
+        # Marquer comme suspect si vérification manuelle requise
+        if resultat["verification_manuelle"]:
+            dossier.is_suspect = True
 
         dossier.save(update_fields=["score_confiance_ocr", "is_suspect"])
 
@@ -414,8 +444,9 @@ def extraire_donnees_dossier(dossier: Dossier) -> dict[str, Any]:
 
         logger.info(
             "Extraction terminée pour le dossier %s — "
-            "succes=%s, notes=%d, confiance=%.2f",
+            "succes=%s, notes=%d, confiance=%.2f, catégories=%s",
             dossier.id, True, len(notes_trouvees), score_confiance,
+            list(categories.keys()),
         )
 
     except Exception as e:

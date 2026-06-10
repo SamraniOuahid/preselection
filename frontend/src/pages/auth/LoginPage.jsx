@@ -75,7 +75,7 @@ export default function LoginPage() {
         <div className="ensa-auth-field">
           <div className="ensa-auth-field-row">
             <label className="label mb-0" htmlFor="login-password">Mot de passe</label>
-            <a href="#" className="ensa-auth-forgot">Mot de passe oublié ?</a>
+            <Link to="/forgot-password" className="ensa-auth-forgot">Mot de passe oublié ?</Link>
           </div>
           <div className="ensa-input-icon-wrap">
             <Lock size={16} className="ensa-input-icon" />

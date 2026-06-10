@@ -26,6 +26,10 @@ class Dossier(models.Model):
         ADMIS_FINAL    = 'ADMIS_FINAL',    'Admis définitivement'
         RECALE_FINAL   = 'RECALE_FINAL',   'Recalé à l\'épreuve écrite'
         ABSENT_ECRIT   = 'ABSENT_ECRIT',   'Absent à l\'épreuve écrite'
+        CONVOQUE_ORAL  = 'CONVOQUE_ORAL',  'Convoqué à l\'épreuve orale'
+        ORAL_ACCEPTE   = 'ORAL_ACCEPTE',   'Accepté après entretien oral'
+        ORAL_REFUSE    = 'ORAL_REFUSE',    'Refusé après entretien oral'
+        INSCRIT        = 'INSCRIT',        'Inscrit définitivement à l\'ENSA BM'
 
     class Mention(models.TextChoices):
         TRES_BIEN  = 'TB', 'Très Bien'
@@ -36,7 +40,7 @@ class Dossier(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     candidat            = models.ForeignKey(Candidat, on_delete=models.CASCADE, related_name='dossiers')
     filiere             = models.ForeignKey(Filiere, on_delete=models.CASCADE, related_name='dossiers')
-    statut              = models.CharField(max_length=20, choices=Statut.choices, default=Statut.BROUILLON)
+    statut              = models.CharField(max_length=25, choices=Statut.choices, default=Statut.BROUILLON)
 
     # Informations académiques déclarées par le candidat
     diplome_obtenu      = models.CharField(max_length=200)
@@ -62,8 +66,6 @@ class Dossier(models.Model):
                                            help_text="Code Massar du candidat")
     cne                 = models.CharField(max_length=20, blank=True,
                                            help_text="Code National de l'Étudiant")
-    massar_verifie      = models.BooleanField(default=False,
-                                              help_text="Vérification Massar confirmée manuellement")
 
     # Résultats de l'analyse automatique
     motif_rejet         = models.TextField(blank=True)
@@ -107,6 +109,10 @@ class Dossier(models.Model):
             self.Statut.ADMIS_FINAL: HistoriqueAction.TypeAction.VALIDATION,
             self.Statut.RECALE_FINAL: HistoriqueAction.TypeAction.REJET_MANUEL,
             self.Statut.ABSENT_ECRIT: HistoriqueAction.TypeAction.MODIFICATION,
+            self.Statut.CONVOQUE_ORAL: HistoriqueAction.TypeAction.MODIFICATION,
+            self.Statut.ORAL_ACCEPTE: HistoriqueAction.TypeAction.VALIDATION,
+            self.Statut.ORAL_REFUSE: HistoriqueAction.TypeAction.REJET_MANUEL,
+            self.Statut.INSCRIT: HistoriqueAction.TypeAction.VALIDATION,
         }
         ancien = self.statut
         self.statut = nouveau_statut
@@ -154,7 +160,89 @@ class Document(models.Model):
         super().save(*args, **kwargs)
 
 
+# ──────────────────────────────────────────────────────────────────
+# NoteSemestre — Évaluation par semestre (remplace NoteMatiere)
+# ──────────────────────────────────────────────────────────────────
+
+class NoteSemestre(models.Model):
+    """
+    Note semestrielle d'un candidat. Chaque semestre est évalué globalement
+    avec une moyenne, une session (Normale/Rattrapage) et une mention.
+    """
+
+    class Semestre(models.TextChoices):
+        S1 = 'S1', 'Semestre 1'
+        S2 = 'S2', 'Semestre 2'
+        S3 = 'S3', 'Semestre 3'
+        S4 = 'S4', 'Semestre 4'
+        S5 = 'S5', 'Semestre 5'
+        S6 = 'S6', 'Semestre 6'
+
+    class Session(models.TextChoices):
+        NORMALE    = 'NORMALE',    'Session Normale'
+        RATTRAPAGE = 'RATTRAPAGE', 'Session de Rattrapage'
+
+    class MentionSemestre(models.TextChoices):
+        TRES_BIEN  = 'TRES_BIEN',  'Très Bien'
+        BIEN       = 'BIEN',       'Bien'
+        ASSEZ_BIEN = 'ASSEZ_BIEN', 'Assez Bien'
+        PASSABLE   = 'PASSABLE',   'Passable'
+
+    id       = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    dossier  = models.ForeignKey(Dossier, on_delete=models.CASCADE, related_name='notes_semestres')
+    semestre = models.CharField(max_length=2, choices=Semestre.choices)
+    moyenne  = models.DecimalField(
+        max_digits=4, decimal_places=2,
+        validators=[MinValueValidator(10), MaxValueValidator(20)],
+        help_text="Moyenne du semestre sur 20 (entre 10 et 20)"
+    )
+    session  = models.CharField(max_length=12, choices=Session.choices, default=Session.NORMALE)
+    mention  = models.CharField(max_length=12, choices=MentionSemestre.choices, editable=False)
+
+    class Meta:
+        db_table = 'notes_semestres'
+        verbose_name = 'Note par Semestre'
+        verbose_name_plural = 'Notes par Semestre'
+        unique_together = ['dossier', 'semestre']
+        ordering = ['semestre']
+
+    def __str__(self):
+        return f"{self.semestre}: {self.moyenne}/20 ({self.get_session_display()}) — {self.dossier}"
+
+    def clean(self):
+        super().clean()
+        if self.moyenne is not None:
+            # Arrondi à 2 décimales pour la précision stricte
+            self.moyenne = round(self.moyenne, 2)
+            if self.moyenne < 10 or self.moyenne > 20:
+                from django.core.exceptions import ValidationError
+                raise ValidationError({"moyenne": f"La moyenne doit être comprise entre 10.00 et 20.00 (reçu: {self.moyenne})."})
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        if self.moyenne is not None:
+            # Logique stricte des mentions
+            if self.moyenne >= 16.00:
+                self.mention = self.MentionSemestre.TRES_BIEN
+            elif self.moyenne >= 14.00:
+                self.mention = self.MentionSemestre.BIEN
+            elif self.moyenne >= 12.00:
+                self.mention = self.MentionSemestre.ASSEZ_BIEN
+            else:
+                self.mention = self.MentionSemestre.PASSABLE
+        super().save(*args, **kwargs)
+
+
+# ──────────────────────────────────────────────────────────────────
+# NoteMatiere — LEGACY (conservé pour compatibilité migrations)
+# ──────────────────────────────────────────────────────────────────
+
 class NoteMatiere(models.Model):
+    """
+    LEGACY — Ce modèle est conservé uniquement pour la compatibilité avec
+    les migrations existantes. Il n'est plus utilisé dans le workflow actif.
+    Utiliser NoteSemestre à la place.
+    """
 
     id             = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     dossier        = models.ForeignKey(Dossier, on_delete=models.CASCADE, related_name='notes')
@@ -168,7 +256,7 @@ class NoteMatiere(models.Model):
 
     class Meta:
         db_table = 'notes_matieres'
-        verbose_name = 'Note par Matière'
+        verbose_name = 'Note par Matière (legacy)'
         unique_together = ['dossier', 'matiere']
 
     def __str__(self):

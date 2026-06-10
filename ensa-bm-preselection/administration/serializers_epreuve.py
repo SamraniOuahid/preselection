@@ -44,12 +44,16 @@ class EpreuveEcriteSerializer(serializers.ModelSerializer):
     moyenne_promo = serializers.ReadOnlyField()
     filiere_nom = serializers.CharField(source='filiere.nom', read_only=True)
     filiere_code = serializers.CharField(source='filiere.code', read_only=True)
+    date_ecrit = serializers.DateTimeField(source='filiere.date_ecrit', read_only=True)
+    lieu_ecrit = serializers.CharField(source='filiere.lieu_ecrit', read_only=True)
+    date_oral = serializers.DateTimeField(source='filiere.date_oral', read_only=True)
+    lieu_oral = serializers.CharField(source='filiere.lieu_oral', read_only=True)
 
     class Meta:
         model = EpreuveEcrite
         fields = [
             'id', 'filiere', 'filiere_nom', 'filiere_code',
-            'nom', 'date_epreuve', 'date_oral', 'lieu_oral', 'heure_oral', 'seuil_admission',
+            'nom', 'date_ecrit', 'lieu_ecrit', 'date_oral', 'lieu_oral', 'seuil_admission',
             'note_sur', 'coefficient', 'statut',
             'nb_admis', 'nb_recales', 'nb_absents',
             'moyenne_promo', 'created_at', 'updated_at',

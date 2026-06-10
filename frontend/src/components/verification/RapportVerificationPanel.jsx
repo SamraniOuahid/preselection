@@ -7,7 +7,6 @@ import { getRapportVerification } from '../../api/dossiers';
 import ScoreAuthenticite from './ScoreAuthenticite';
 import AlertesVerification from './AlertesVerification';
 import DocumentsVerification from './DocumentsVerification';
-import MassarVerification from './MassarVerification';
 
 export default function RapportVerificationPanel({ dossierId, dossier, onUpdate }) {
   const [rapport, setRapport] = useState(null);
@@ -20,7 +19,7 @@ export default function RapportVerificationPanel({ dossierId, dossier, onUpdate 
       const data = await getRapportVerification(dossierId);
       setRapport(data);
     } catch (err) {
-      console.error("Erreur de chargement du rapport:", err);
+      // console.error("Erreur de chargement du rapport:", err);
       setError("Impossible de charger le rapport de vérification automatique.");
     } finally {
       setLoading(false);
@@ -57,10 +56,7 @@ export default function RapportVerificationPanel({ dossierId, dossier, onUpdate 
           <div className="md:col-span-7 h-64 bg-gray-200 rounded-xl" />
         </div>
 
-        {/* Documents table Skeleton */}
-        <div className="h-48 bg-gray-200 rounded-xl w-full" />
-
-        {/* Massar Card Skeleton */}
+        {/* Skeleton documents */}
         <div className="h-28 bg-gray-200 rounded-xl w-full" />
       </div>
     );
@@ -117,10 +113,7 @@ export default function RapportVerificationPanel({ dossierId, dossier, onUpdate 
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs font-semibold px-2.5 py-1 rounded bg-[#EBF5FB] text-[#2E86C1] self-start sm:self-center">
-          <span className="w-2 h-2 rounded-full bg-[#2E86C1]" />
-          Statut : {rapport.massar_verifie ? 'Vérifié Massar' : 'Massar en attente'}
-        </div>
+
       </div>
 
       {/* ── ROW: SCORE & ALERTS ────────────────────────────────── */}
@@ -156,20 +149,7 @@ export default function RapportVerificationPanel({ dossierId, dossier, onUpdate 
         />
       </div>
 
-      {/* ── SECTION: MASSAR MANUAL VERIFICATION ───────────────── */}
-      <MassarVerification
-        dossierId={dossierId}
-        massarVerifie={rapport.massar_verifie ?? dossier.massar_verifie ?? false}
-        cne={dossier.candidat?.cne || dossier.cne}
-        codeMassar={dossier.candidat?.code_massar || dossier.code_massar}
-        onVerifie={() => {
-          // Rafraîchir localement le rapport et notifier le parent
-          fetchRapport();
-          if (onUpdate) {
-            onUpdate();
-          }
-        }}
-      />
+
     </div>
   );
 }
@@ -177,5 +157,5 @@ export default function RapportVerificationPanel({ dossierId, dossier, onUpdate 
 RapportVerificationPanel.propTypes = {
   dossierId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
   dossier: PropTypes.object.isRequired,
-  onUpdate: PropTypes.func.isRequired,
+  onUpdate: PropTypes.func,
 };

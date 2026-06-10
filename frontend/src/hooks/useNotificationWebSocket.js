@@ -25,19 +25,19 @@ export function useNotificationWebSocket(taskId) {
     const tokens = getStoredTokens();
     const token = tokens?.access || '';
     
-    console.log('[WS] Token récupéré:', token ? 'OK' : 'NULL');
+    // console.log('[WS] Token récupéré:', token ? 'OK' : 'NULL');
 
     const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const wsHost = window.location.hostname || 'localhost';
     const wsUrl = `${wsProtocol}://${wsHost}:8000/ws/notifications/${taskId}/?token=${token}`;
     
-    console.log('[WS] URL:', wsUrl);
+    // console.log('[WS] URL:', wsUrl);
 
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {
-      console.log('[WS] Connecté');
+      // console.log('[WS] Connecté');
       tentativesRef.current = 0;
       setEtat((prev) => ({ ...prev, connecte: true, erreurWs: null }));
       // Ping toutes les 30s pour garder la connexion active
@@ -87,7 +87,7 @@ export function useNotificationWebSocket(taskId) {
     };
 
     ws.onerror = (err) => {
-      console.error('[WS] Erreur détectée:', err);
+      // console.error('[WS] Erreur détectée:', err);
       setEtat((prev) => ({
         ...prev,
         erreurWs: 'Connexion WebSocket perdue.',
@@ -97,9 +97,9 @@ export function useNotificationWebSocket(taskId) {
 
     ws.onclose = (event) => {
       clearInterval(pingRef.current);
-      console.log('[WS] Connexion fermée avec le code:', event.code);
+      // console.log('[WS] Connexion fermée avec le code:', event.code);
       if (event.code === 4001) {
-        console.error('[WS] Rejeté: token invalide ou rôle insuffisant');
+        // console.error('[WS] Rejeté: token invalide ou rôle insuffisant');
         setEtat((prev) => ({
           ...prev,
           erreurWs: 'Session expirée — veuillez vous reconnecter.',
@@ -108,7 +108,7 @@ export function useNotificationWebSocket(taskId) {
       } else if (event.code !== 1000) {
         if (tentativesRef.current < 3) {
           tentativesRef.current += 1;
-          console.log(`[WS] Reconnexion automatique tentative ${tentativesRef.current}/3 dans 2 secondes...`);
+          // console.log(`[WS] Reconnexion automatique tentative ${tentativesRef.current}/3 dans 2 secondes...`);
           setTimeout(() => {
             connecter();
           }, 2000);

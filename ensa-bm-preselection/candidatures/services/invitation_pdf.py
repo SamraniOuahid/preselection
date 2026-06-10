@@ -385,7 +385,7 @@ def generer_invitation_ecrit(dossier):
         elements, styles,
         "📝 Détails de l'Épreuve Écrite",
         filiere.date_ecrit,
-        filiere.heure_ecrit,
+        filiere.date_ecrit.strftime('%H:%M') if filiere.date_ecrit else 'Heure à confirmer',
         filiere.lieu_ecrit,
     )
 
@@ -443,13 +443,10 @@ def generer_invitation_oral(dossier):
     note_ecrite = dossier.notes_ecrits.first()
     epreuve = note_ecrite.epreuve if note_ecrite else None
 
-    # Priorité : données de l'épreuve > données de la filière
-    date_oral  = (epreuve.date_oral if epreuve and epreuve.date_oral
-                  else filiere.date_oral)
-    heure_oral = (epreuve.heure_oral if epreuve and epreuve.heure_oral
-                  else filiere.heure_oral or '09:00')
-    lieu_oral  = (epreuve.lieu_oral if epreuve and epreuve.lieu_oral
-                  else filiere.lieu_oral or 'ENSA Béni Mellal')
+    # Données de la filière
+    date_oral  = filiere.date_oral
+    heure_oral = filiere.date_oral.strftime('%H:%M') if filiere.date_oral else '09:00'
+    lieu_oral  = filiere.lieu_oral or 'ENSA Béni Mellal'
 
     doc = SimpleDocTemplate(
         buffer,

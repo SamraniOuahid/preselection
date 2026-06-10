@@ -49,12 +49,14 @@ class ConfigScoringViewSet(viewsets.ModelViewSet):
     def preview_score(self, request):
         """
         Simule le calcul du score avec des notes données.
-        Body: { filiere_id, notes: [{matiere, note}], mention }
+        Body: { filiere_id, notes: [{matiere, note}], mention, diplome }
         """
         from candidatures.services.scoring import calculer_score
+        from administration.models import Filiere
         filiere_id = request.data.get('filiere_id')
         notes      = request.data.get('notes', [])
         mention    = request.data.get('mention', '')
+        diplome    = request.data.get('diplome', '')
 
         if not filiere_id:
             return Response(
@@ -67,6 +69,7 @@ class ConfigScoringViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        filiere_obj = Filiere.objects.filter(id=filiere_id).first()
         configs = ConfigScoring.objects.filter(filiere_id=filiere_id)
-        score   = calculer_score(notes, configs, mention)
+        score   = calculer_score(notes, configs, mention, diplome=diplome, filiere_obj=filiere_obj)
         return Response({"score_simule": round(score, 2)})

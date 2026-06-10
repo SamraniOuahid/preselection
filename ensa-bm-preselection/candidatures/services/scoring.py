@@ -2,11 +2,17 @@
 """
 Service de calcul du score et du classement des dossiers.
 
-Algorithme :
-  1. Score pondéré = Σ (note_matière × poids / 100)
-  2. Bonus mention (TB=+2, B=+1, AB=+0.5, P=+0)
-  3. Score final = min(score_pondéré + bonus, 20.0)
-  4. Recalcul du classement de tous les dossiers éligibles
+Algorithme (basé sur les semestres + pondération par filière) :
+  1. Score semestriel = Moyenne des moyennes semestrielles
+  2. Score pondéré par filière (via extraction OCR + fuzzy matching) :
+     - TDI  : INFO×0.35 + MATH×0.30 + ELEC_AUTO×0.25 + LANGUES×0.10
+     - IACS : INFO×0.40 + MATH×0.35 + RESEAUX_BD×0.15 + LANGUES×0.10
+     - IAA  : CHIMIE_BIO×0.60 + MATH×0.20 + INFO×0.10 + LANGUES×0.10
+     - G2ER : MATH×0.30 + CHIMIE_BIO×0.30 + ELEC_AUTO×0.25 + INFO×0.15
+  3. Bonus mention (TB=+2, B=+1, AB=+0.5, P=+0)
+  4. Pénalité rattrapages (configurable via ConfigScoring)
+  5. Score final = min(score_pondéré + bonus - pénalités, 20.0)
+  6. Recalcul du classement de tous les dossiers éligibles
      de la même filière (tri par score DESC puis moyenne DESC)
 """
 
@@ -19,8 +25,14 @@ from typing import Any
 from django.db import transaction
 from django.db.models import QuerySet, F
 
-from candidatures.models import Dossier, NoteMatiere
+from candidatures.models import Dossier, NoteSemestre
 from scoring.models import ConfigScoring
+from candidatures.services.fuzzy_matching import (
+    POIDS_FILIERES,
+    identifier_categorie,
+    regrouper_notes_par_categorie,
+    calculer_score_pondere_filiere,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +50,9 @@ BONUS_MENTION_DEFAUT: dict[str, Decimal] = {
     "P": Decimal("0.00"),
 }
 
+# Pénalité par semestre en rattrapage (par défaut)
+PENALITE_RATTRAPAGE_DEFAUT: Decimal = Decimal("0.50")
+
 # Statuts éligibles pour le classement
 STATUTS_CLASSEMENT: list[str] = [
     Dossier.Statut.EN_ATTENTE,
@@ -50,73 +65,91 @@ STATUTS_CLASSEMENT: list[str] = [
 # ──────────────────────────────────────────────────────────────────
 
 
-def _calculer_score_pondere(
+def _calculer_score_semestres(
     dossier: Dossier, configs: QuerySet[ConfigScoring]
 ) -> Decimal:
     """
-    Calcule le score pondéré à partir des notes déclarées et des poids
-    configurés pour chaque matière.
+    Calcule le score pondéré à partir des notes semestrielles.
 
-    Formule : score = Σ (note_declaree × poids / 100)
+    Formule : score = Moyenne des moyennes semestrielles
+
+    Args:
+        dossier: Instance du modèle Dossier.
+        configs: QuerySet des ConfigScoring de la filière (pour compatibilité).
+
+    Returns:
+        Score pondéré (Decimal).
+    """
+    notes_semestres = NoteSemestre.objects.filter(dossier=dossier)
+
+    if not notes_semestres.exists():
+        # Fallback : utiliser la moyenne générale déclarée si aucun semestre
+        if dossier.moyenne_generale is not None:
+            logger.info(
+                "Dossier %s : aucun semestre, utilisation de la moyenne "
+                "générale déclarée = %.2f.",
+                dossier.id, float(dossier.moyenne_generale),
+            )
+            return Decimal(str(dossier.moyenne_generale))
+
+        logger.warning(
+            "Dossier %s : aucun semestre et aucune moyenne déclarée. "
+            "Score mis à 0.", dossier.id,
+        )
+        return Decimal("0.00")
+
+    # Calcul de la moyenne des semestres
+    total = sum(Decimal(str(n.moyenne)) for n in notes_semestres)
+    nb_semestres = notes_semestres.count()
+    score_moyen = total / Decimal(str(nb_semestres))
+
+    logger.info(
+        "Dossier %s : score semestriel = %.4f (%d semestres).",
+        dossier.id, float(score_moyen), nb_semestres,
+    )
+
+    return score_moyen
+
+
+def _calculer_penalite_rattrapages(
+    dossier: Dossier, configs: QuerySet[ConfigScoring]
+) -> Decimal:
+    """
+    Calcule la pénalité liée aux semestres validés en rattrapage.
 
     Args:
         dossier: Instance du modèle Dossier.
         configs: QuerySet des ConfigScoring de la filière.
 
     Returns:
-        Score pondéré (Decimal).
+        Pénalité totale (Decimal, valeur positive à soustraire).
     """
-    score_total = Decimal("0.00")
-    matieres_comptees = 0
+    nb_rattrapages = NoteSemestre.objects.filter(
+        dossier=dossier, session='RATTRAPAGE'
+    ).count()
 
-    # Récupérer toutes les notes du dossier, indexées par matière (lower)
-    notes_par_matiere: dict[str, NoteMatiere] = {
-        n.matiere.strip().lower(): n
-        for n in NoteMatiere.objects.filter(dossier=dossier)
-    }
+    if nb_rattrapages == 0:
+        return Decimal("0.00")
 
+    # Chercher une pénalité personnalisée dans les configs
+    penalite_par_rattrapage = PENALITE_RATTRAPAGE_DEFAUT
     for config in configs:
-        matiere_config = config.matiere.strip().lower()
-
-        # Recherche de la note correspondante (insensible à la casse)
-        note_matiere: NoteMatiere | None = notes_par_matiere.get(
-            matiere_config
-        )
-
-        if note_matiere is None:
-            # Essayer une correspondance partielle
-            for matiere_key, note_obj in notes_par_matiere.items():
-                if matiere_config in matiere_key or matiere_key in matiere_config:
-                    note_matiere = note_obj
-                    break
-
-        if note_matiere is None or note_matiere.note_declaree is None:
-            logger.warning(
-                "Dossier %s : matière '%s' non trouvée ou sans note "
-                "déclarée — score partiel = 0 pour cette matière.",
-                dossier.id, config.matiere,
+        if config.bonus_mention and 'penalite_rattrapage' in config.bonus_mention:
+            penalite_par_rattrapage = Decimal(
+                str(config.bonus_mention['penalite_rattrapage'])
             )
-            continue
+            break
 
-        # Calcul du score partiel : note × (poids / 100)
-        poids_decimal = Decimal(str(config.poids)) / Decimal("100")
-        score_partiel = note_matiere.note_declaree * poids_decimal
-
-        score_total += score_partiel
-        matieres_comptees += 1
-
-        logger.debug(
-            "Dossier %s — %s : %.2f × %.2f%% = %.4f",
-            dossier.id, config.matiere,
-            float(note_matiere.note_declaree), float(config.poids),
-            float(score_partiel),
-        )
+    penalite = penalite_par_rattrapage * Decimal(str(nb_rattrapages))
 
     logger.info(
-        "Dossier %s : score pondéré = %.4f (%d matières prises en compte).",
-        dossier.id, float(score_total), matieres_comptees,
+        "Dossier %s : pénalité rattrapages = %.2f "
+        "(%d × %.2f).",
+        dossier.id, float(penalite), nb_rattrapages,
+        float(penalite_par_rattrapage),
     )
-    return score_total
+
+    return penalite
 
 
 def _obtenir_bonus_mention_valeur(
@@ -217,6 +250,42 @@ def _recalculer_classement(filiere_id: Any) -> int:
 
 
 # ──────────────────────────────────────────────────────────────────
+def _obtenir_coefficient_diplome(dossier: Dossier) -> Decimal:
+    """
+    Récupère le coefficient lié au diplôme du dossier.
+    Si le diplôme commence par 'autre' ou n'est pas dans la liste des diplômes acceptés,
+    on utilise le coef_autre_diplome de la filière.
+    """
+    diplome = (dossier.diplome_obtenu or "").strip().lower()
+    if not diplome:
+        return Decimal("1.00")
+        
+    if diplome.startswith("autre"):
+        return Decimal(str(dossier.filiere.coef_autre_diplome))
+
+    diplomes_acceptes = dossier.filiere.diplomes_acceptes.filter(is_active=True)
+
+    # Si aucun diplôme accepté n'est configuré pour cette filière (par ex. dans les tests), pas de pénalité
+    if not diplomes_acceptes.exists():
+        return Decimal("1.00")
+
+    # Nettoyage et normalisation
+    def clean_val(s: str) -> str:
+        s = s.replace('é', 'e').replace('è', 'e').replace('à', 'a').replace('â', 'a').replace('ï', 'i').replace('ç', 'c')
+        return ''.join(c for c in s if c.isalnum())
+
+    cleaned_candidat = clean_val(diplome)
+    for da in diplomes_acceptes:
+        nom_acc = da.nom_diplome.strip().lower()
+        cleaned_acc = clean_val(nom_acc)
+        if nom_acc == diplome or cleaned_candidat in cleaned_acc or cleaned_acc in cleaned_candidat:
+            return Decimal(str(da.coefficient))
+
+    # Si non trouvé dans les acceptés
+    return Decimal(str(dossier.filiere.coef_autre_diplome))
+
+
+# ──────────────────────────────────────────────────────────────────
 # Fonction principale
 # ──────────────────────────────────────────────────────────────────
 
@@ -229,11 +298,13 @@ def calculer_score_dossier(dossier: Dossier) -> float:
 
     Algorithme :
       1. Lire les ConfigScoring actifs de la filière
-      2. Calculer le score pondéré (Σ note × poids/100)
+      2. Calculer la moyenne des semestres
       3. Ajouter le bonus mention (TB=+2, B=+1, AB=+0.5, P=+0)
-      4. Score final = min(score_pondéré + bonus, 20.0)
-      5. Sauvegarder le score dans le dossier
-      6. Recalculer le classement de la filière entière
+      4. Soustraire la pénalité rattrapages
+      5. Appliquer le coefficient du diplôme (ou coef autre diplôme)
+      6. Score final = min(max(score, 0), 20.0) * coefficient
+      7. Sauvegarder le score dans le dossier
+      8. Recalculer le classement de la filière entière
 
     Args:
         dossier: Instance du modèle Dossier à scorer.
@@ -256,25 +327,18 @@ def calculer_score_dossier(dossier: Dossier) -> float:
             filiere=dossier.filiere,
         )
 
-        if not configs.exists():
-            logger.warning(
-                "Dossier %s : aucune configuration de scoring trouvée "
-                "pour la filière '%s'. Score mis à 0.",
-                dossier.id, dossier.filiere.code,
-            )
-            dossier.score = Decimal("0.00")
-            dossier.save(update_fields=["score", "updated_at"])
-            _recalculer_classement(dossier.filiere_id)
-            return float(dossier.score)
-
-        # ── Étape 2 : Calculer le score pondéré ──
-        score_pondere = _calculer_score_pondere(dossier, configs)
+        # ── Étape 2 : Calculer le score semestriel ──
+        score_pondere = _calculer_score_semestres(dossier, configs)
 
         # ── Étape 3 : Ajouter le bonus mention ──
         bonus = _obtenir_bonus_mention(dossier, configs)
 
-        # ── Étape 4 : Score final plafonné à 20.0 ──
-        score_brut = score_pondere + bonus
+        # ── Étape 3b : Soustraire la pénalité rattrapages ──
+        penalite = _calculer_penalite_rattrapages(dossier, configs)
+
+        # ── Étape 4 : Appliquer le coefficient du diplôme ──
+        coef = _obtenir_coefficient_diplome(dossier)
+        score_brut = (score_pondere + bonus - penalite) * coef
         score_final = min(max(score_brut, SCORE_MIN), SCORE_MAX)
 
         # Arrondir à 2 décimales
@@ -283,17 +347,25 @@ def calculer_score_dossier(dossier: Dossier) -> float:
         )
 
         logger.info(
-            "Dossier %s : score_pondéré=%.4f + bonus=%.2f = %.2f "
-            "(final après plafonnement = %.2f).",
+            "Dossier %s : (score_sem=%.4f + bonus=%.2f - penalite=%.2f) "
+            "* coef=%.2f = %.2f (final après plafonnement = %.2f).",
             dossier.id, float(score_pondere), float(bonus),
+            float(penalite), float(coef),
             float(score_brut), float(score_final),
         )
 
-        # ── Étape 5 : Sauvegarder le score ──
-        dossier.score = score_final
-        dossier.save(update_fields=["score", "updated_at"])
+        # ── Étape 5 : Mettre à jour la moyenne générale ──
+        # Synchroniser la moyenne_generale avec la moyenne des semestres
+        notes_sem = NoteSemestre.objects.filter(dossier=dossier)
+        if notes_sem.exists():
+            moy = sum(float(n.moyenne) for n in notes_sem) / notes_sem.count()
+            dossier.moyenne_generale = Decimal(str(round(moy, 2)))
 
-        # ── Étape 6 : Recalculer le classement de la filière ──
+        # ── Étape 6 : Sauvegarder le score ──
+        dossier.score = score_final
+        dossier.save(update_fields=["score", "moyenne_generale", "updated_at"])
+
+        # ── Étape 7 : Recalculer le classement de la filière ──
         nb_classes = _recalculer_classement(dossier.filiere_id)
         logger.info(
             "Classement mis à jour : %d dossiers classés dans la "
@@ -319,40 +391,155 @@ def calculer_score(
     notes: list[dict[str, Any]],
     configs: QuerySet[ConfigScoring],
     mention: str | None = None,
+    diplome: str | None = None,
+    filiere_obj=None,
 ) -> float:
     """
-    Calcule un score simulé à partir d'une liste de notes et d'une config.
+    Calcule un score simulé à partir d'une liste de notes semestrielles et d'une config.
     Utilisé par l'endpoint preview_score.
+    
+    Accepte les formats :
+    - Semestres : [{"semestre": "S1", "moyenne": 14, "session": "NORMALE", "mention": "BIEN"}, ...]
+    - Legacy matières : [{"matiere": "Math", "note": 15}, ...]
+
+    Pour le format legacy matières, le fuzzy matching est utilisé pour regrouper
+    les notes par catégorie et appliquer la pondération par filière si applicable.
     """
-    if not configs.exists():
+    if not notes:
         return 0.0
 
-    notes_par_matiere: dict[str, Decimal] = {}
-    for note in notes:
-        matiere = (note.get("matiere") or "").strip()
-        note_val = note.get("note") if "note" in note else note.get("note_declaree")
-        if not matiere or note_val is None:
-            continue
-        try:
-            notes_par_matiere[matiere.lower()] = Decimal(str(note_val))
-        except Exception:
-            continue
+    # Détecter si les notes sont au format semestre ou matière
+    is_semestre_format = any('semestre' in n or 'moyenne' in n for n in notes)
 
-    score_total = Decimal("0.00")
-    for config in configs:
-        matiere_config = config.matiere.strip().lower()
-        note_val = notes_par_matiere.get(matiere_config)
-        if note_val is None:
-            for matiere_key, nval in notes_par_matiere.items():
-                if matiere_config in matiere_key or matiere_key in matiere_config:
-                    note_val = nval
-                    break
-        if note_val is None:
-            continue
-        poids_decimal = Decimal(str(config.poids)) / Decimal("100")
-        score_total += note_val * poids_decimal
+    if is_semestre_format:
+        # Format semestre
+        moyennes = []
+        nb_rattrapages = 0
+        for note in notes:
+            moy = note.get("moyenne")
+            if moy is None:
+                continue
+            try:
+                moyennes.append(Decimal(str(moy)))
+            except Exception:
+                continue
+            if note.get("session") == "RATTRAPAGE":
+                nb_rattrapages += 1
+
+        if not moyennes:
+            return 0.0
+
+        score_total = sum(moyennes) / Decimal(str(len(moyennes)))
+
+        # Pénalité rattrapages
+        penalite = PENALITE_RATTRAPAGE_DEFAUT * Decimal(str(nb_rattrapages))
+        for config in configs:
+            if config.bonus_mention and 'penalite_rattrapage' in config.bonus_mention:
+                penalite = Decimal(str(config.bonus_mention['penalite_rattrapage'])) * Decimal(str(nb_rattrapages))
+                break
+
+    else:
+        # Format legacy matières — avec fuzzy matching par catégorie
+        notes_par_matiere: dict[str, Decimal] = {}
+        for note in notes:
+            matiere = (note.get("matiere") or "").strip()
+            note_val = note.get("note") if "note" in note else note.get("note_declaree")
+            if not matiere or note_val is None:
+                continue
+            try:
+                notes_par_matiere[matiere.lower()] = Decimal(str(note_val))
+            except Exception:
+                continue
+
+        # Essayer d'utiliser le scoring par filière via fuzzy matching
+        code_filiere = filiere_obj.code if filiere_obj else None
+        code_simplifie = (
+            code_filiere.split("-")[0].upper().strip() if code_filiere else None
+        )
+
+        if code_simplifie and code_simplifie in POIDS_FILIERES and notes_par_matiere:
+            # Regrouper les notes par catégorie via fuzzy matching
+            categories = regrouper_notes_par_categorie(notes_par_matiere)
+
+            if categories:
+                # Calculer la moyenne générale comme fallback
+                moyenne_fallback = None
+                if notes_par_matiere:
+                    moyenne_fallback = float(
+                        sum(notes_par_matiere.values())
+                        / Decimal(str(len(notes_par_matiere)))
+                    )
+
+                result_filiere = calculer_score_pondere_filiere(
+                    categories, code_filiere, moyenne_fallback
+                )
+                score_total = Decimal(str(result_filiere["score"]))
+            else:
+                # Aucune catégorie identifiée, fallback sur la moyenne simple
+                if notes_par_matiere:
+                    score_total = sum(notes_par_matiere.values()) / Decimal(
+                        str(len(notes_par_matiere))
+                    )
+                else:
+                    score_total = Decimal("0.00")
+        else:
+            # Pas de filière connue ou pas de notes, utiliser l'ancien calcul
+            score_total = Decimal("0.00")
+            if configs.exists():
+                for config in configs:
+                    matiere_config = config.matiere.strip().lower()
+                    note_val = notes_par_matiere.get(matiere_config)
+                    if note_val is None:
+                        # Essayer le fuzzy matching sur les matières de la config
+                        for matiere_key, nval in notes_par_matiere.items():
+                            cat_config, _ = identifier_categorie(matiere_config)
+                            cat_key, _ = identifier_categorie(matiere_key)
+                            if cat_config and cat_key and cat_config == cat_key:
+                                note_val = nval
+                                break
+                            # Fallback : correspondance par sous-chaîne
+                            if (matiere_config in matiere_key
+                                    or matiere_key in matiere_config):
+                                note_val = nval
+                                break
+                    if note_val is None:
+                        continue
+                    poids_decimal = Decimal(str(config.poids)) / Decimal("100")
+                    score_total += note_val * poids_decimal
+            elif notes_par_matiere:
+                # Pas de configs, moyenne simple
+                score_total = sum(notes_par_matiere.values()) / Decimal(str(len(notes_par_matiere)))
+
+        penalite = Decimal("0.00")
 
     bonus = _obtenir_bonus_mention_valeur(mention, configs)
-    score_final = min(max(score_total + bonus, SCORE_MIN), SCORE_MAX)
+    
+    # Détermination du coefficient pour la simulation
+    coef = Decimal("1.00")
+    if filiere_obj and diplome:
+        diplome_cleaned = diplome.strip().lower()
+        if diplome_cleaned.startswith("autre"):
+            coef = Decimal(str(filiere_obj.coef_autre_diplome))
+        else:
+            diplomes_acceptes = filiere_obj.diplomes_acceptes.filter(is_active=True)
+            if not diplomes_acceptes.exists():
+                coef = Decimal("1.00")
+            else:
+                def clean_val(s: str) -> str:
+                    s = s.replace('é', 'e').replace('è', 'e').replace('à', 'a').replace('â', 'a').replace('ï', 'i').replace('ç', 'c')
+                    return ''.join(c for c in s if c.isalnum())
+                cleaned_candidat = clean_val(diplome_cleaned)
+                found = False
+                for da in diplomes_acceptes:
+                    nom_acc = da.nom_diplome.strip().lower()
+                    cleaned_acc = clean_val(nom_acc)
+                    if nom_acc == diplome_cleaned or cleaned_candidat in cleaned_acc or cleaned_acc in cleaned_candidat:
+                        coef = Decimal(str(da.coefficient))
+                        found = True
+                        break
+                if not found:
+                    coef = Decimal(str(filiere_obj.coef_autre_diplome))
+
+    score_final = min(max((score_total + bonus - penalite) * coef, SCORE_MIN), SCORE_MAX)
     score_final = score_final.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     return float(score_final)
