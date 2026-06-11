@@ -1,0 +1,111 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Docker Compose — ENSA BM Présélection Platform
+# Services: PostgreSQL, Redis, Django Backend, React Frontend, Nginx
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ── PostgreSQL Database ──────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: ensa_db
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis (Channels WebSocket + Cache) ───────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: ensa_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Django Backend (Gunicorn ASGI) ───────────────────────────────────────
+  backend:
+    build:
+      context: ./ensa-bm-preselection
+      dockerfile: Dockerfile
+    container_name: ensa_backend
+    restart: unless-stopped
+    volumes:
+      - static_files:/app/staticfiles
+      - media_files:/app/media
+      - backend_logs:/app/logs
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=db
+      - REDIS_HOST=redis
+      - USE_POSTGRES=True
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    expose:
+      - "8000"
+
+  # ── React Frontend (Build) ──────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ensa_frontend
+    restart: "no"
+    volumes:
+      - frontend_build:/usr/share/nginx/html
+
+  # ── Nginx Reverse Proxy ─────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: ensa_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/templates/default.conf.template:ro
+      - frontend_build:/usr/share/nginx/html:ro
+      - static_files:/app/staticfiles:ro
+      - media_files:/app/media:ro
+      - certbot_conf:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot:ro
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+    depends_on:
+      - backend
+      - frontend
+
+  # ── Certbot (Let's Encrypt SSL) ─────────────────────────────────────────
+  certbot:
+    image: certbot/certbot:latest
+    container_name: ensa_certbot
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  postgres_data:
+  static_files:
+  media_files:
+  backend_logs:
+  frontend_build:
+  certbot_conf:
+  certbot_www:

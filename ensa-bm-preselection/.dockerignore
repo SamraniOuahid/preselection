@@ -1,0 +1,15 @@
+# Docker
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+db.sqlite3
+.env
+.coverage
+*.xlsx
+*.docx
+logs/
+media/convocations/
+*.pdf
+.git/

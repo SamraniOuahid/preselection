@@ -81,9 +81,14 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="ensa-footer-bottom">
-          <span className="ensa-footer-copy">
-            © {new Date().getFullYear()} ENSA Béni Mellal — Université Sultan Moulay Slimane — Tous droits réservés
-          </span>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span className="ensa-footer-copy">
+              © {new Date().getFullYear()} ENSA Béni Mellal — Université Sultan Moulay Slimane — Tous droits réservés
+            </span>
+            <span style={{ fontSize: '0.85rem', marginTop: '0.25rem', opacity: 0.8 }}>
+              Développé par <span style={{ fontWeight: 500, color: 'var(--brand-primary)' }}>Ouahid Samrani</span>
+            </span>
+          </div>
           <div className="ensa-footer-morocco">
             <div className="ensa-morocco-bar" style={{ background: '#006233' }} />
             <div className="ensa-morocco-bar" style={{ background: '#C1272D' }} />

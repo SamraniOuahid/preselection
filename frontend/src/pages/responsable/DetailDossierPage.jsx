@@ -53,6 +53,28 @@ export default function DetailDossierPage() {
     }
   };
 
+  const handleDownloadPDF = async (convocationId) => {
+    if (!convocationId) {
+      alert("Erreur: ID de convocation introuvable.");
+      return;
+    }
+    try {
+      const response = await API.get(`/convocations/${convocationId}/telecharger_pdf/`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Convocation_${dossier.candidat?.nom || 'Candidat'}_ENSA_BM.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("Erreur lors du téléchargement de la convocation.");
+    }
+  };
+
   if (loading) return <LoadingSpinner size="lg" text="Chargement..." className="py-20" />;
 
   if (!dossier) {
@@ -379,7 +401,7 @@ export default function DetailDossierPage() {
                <h3 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
                 <Calendar size={15} /> Entretien Oral
               </h3>
-              <button className="btn w-full flex justify-center gap-2 bg-[#1B3A6B] text-white hover:bg-[#142D52]" onClick={() => window.open(`/api/convocations/${dossier.convocations_oral?.[0]?.id}/telecharger_pdf/`, '_blank')}>
+              <button className="btn w-full flex justify-center gap-2 bg-[#1B3A6B] text-white hover:bg-[#142D52]" onClick={() => handleDownloadPDF(dossier.convocations_oral?.[0]?.id)}>
                 <Download size={16} /> Télécharger convocation
               </button>
             </div>

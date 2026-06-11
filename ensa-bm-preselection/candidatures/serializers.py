@@ -118,6 +118,7 @@ class DossierDetailSerializer(serializers.ModelSerializer):
     statut_epreuve = serializers.SerializerMethodField()
     seuil_admission = serializers.SerializerMethodField()
     lieu_oral = serializers.SerializerMethodField()
+    convocations_oral = serializers.SerializerMethodField()
 
     class Meta:
         model  = Dossier
@@ -133,7 +134,7 @@ class DossierDetailSerializer(serializers.ModelSerializer):
             'date_soumission', 'created_at', 'updated_at', 'total_candidats',
             'score_final', 'rang_final', 'note_ecrite', 'note_sur',
             'date_ecrit', 'lieu_ecrit', 'date_oral', 'statut_epreuve', 'seuil_admission',
-            'lieu_oral',
+            'lieu_oral', 'convocations_oral',
         ]
 
     def get_total_candidats(self, obj):
@@ -166,6 +167,9 @@ class DossierDetailSerializer(serializers.ModelSerializer):
 
     def get_lieu_oral(self, obj):
         return obj.filiere.lieu_oral
+
+    def get_convocations_oral(self, obj):
+        return [{"id": c.id, "epreuve_oral": c.epreuve_oral_id} for c in obj.convocations_oral.all()]
 
 
 class DossierCreateUpdateSerializer(serializers.ModelSerializer):

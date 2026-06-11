@@ -60,23 +60,26 @@ TEMPLATES = [{
 
 ASGI_APPLICATION = 'config.asgi.application'
 
-# ── Base de données PostgreSQL ──────────────────────────────────────
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME':     config('DB_NAME'),
-#         'USER':     config('DB_USER'),
-#         'PASSWORD': config('DB_PASSWORD'),
-#         'HOST':     config('DB_HOST', default='localhost'),
-#         'PORT':     config('DB_PORT', default='5432'),
-#     }
-# }
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# ── Base de données ─────────────────────────────────────────────────
+# PostgreSQL en production (USE_POSTGRES=True), SQLite en dev (par défaut)
+if config('USE_POSTGRES', default=False, cast=bool):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME':     config('DB_NAME'),
+            'USER':     config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST':     config('DB_HOST', default='localhost'),
+            'PORT':     config('DB_PORT', default='5432'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 # ── Auth personnalisé ───────────────────────────────────────────────
 AUTH_USER_MODEL = 'users.User'
 
@@ -105,11 +108,18 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 
-# ── CORS (pour React en dev) ────────────────────────────────────────
+# ── CORS ────────────────────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",   # Vite dev server
     "http://localhost:3000",
 ]
+# Ajouter le domaine de production si configuré
+_domain = config('DOMAIN_NAME', default='')
+if _domain:
+    CORS_ALLOWED_ORIGINS += [
+        f"https://{_domain}",
+        f"https://www.{_domain}",
+    ]
 
 # ── Fichiers media (uploads candidats) ─────────────────────────────
 MEDIA_URL  = '/media/'
@@ -128,8 +138,9 @@ LANGUAGE_CODE = 'fr-fr'
 TIME_ZONE     = 'Africa/Casablanca'
 USE_I18N      = True
 USE_TZ        = True
-STATIC_URL    = '/static/'
+STATIC_URL    = '/static/django/' if not DEBUG else '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ── Django Channels — WebSocket avec Redis ──────────────────────────

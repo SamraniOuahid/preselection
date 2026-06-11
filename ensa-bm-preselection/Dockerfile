@@ -21,8 +21,7 @@ WORKDIR /app
 # Install Python dependencies first (Docker layer caching)
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir gunicorn psycopg2-binary
+    && pip install --no-cache-dir -r requirements.txt
 
 # Copy project source code
 COPY . .
@@ -39,11 +38,4 @@ RUN SECRET_KEY=build-placeholder \
 # Expose port
 EXPOSE 8000
 
-# Default command: Gunicorn with Uvicorn workers for ASGI support
-CMD ["gunicorn", "config.asgi:application", \
-     "-k", "uvicorn.UvicornWorker", \
-     "--bind", "0.0.0.0:8000", \
-     "--workers", "3", \
-     "--timeout", "120", \
-     "--access-logfile", "-", \
-     "--error-logfile", "-"]
+CMD ["gunicorn", "config.asgi:application", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-"]
