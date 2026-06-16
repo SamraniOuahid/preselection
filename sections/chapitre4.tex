@@ -1,0 +1,278 @@
+\chapter{Implémentation, Asynchronisme et Tests}
+
+\section{Introduction}
+
+Ce chapitre présente les aspects concrets de l'implémentation : les interfaces développées, la gestion de l'asynchronisme pour les opérations coûteuses, le système de notifications en temps réel, la sécurité et la stratégie de tests.
+
+\section{Interfaces développées}
+
+L'application comprend 11 interfaces principales, couvrant les trois rôles d'utilisateurs (Candidat, Responsable, Administrateur) :
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+Interface & Rôle & Description \\
+\hline
+Page d'accueil & Public & Landing page avec statistiques ENSA BM et filières \\
+\hline
+Authentification & Public & Inscription (email + CIN) et connexion JWT \\
+\hline
+Formulaire candidature & Candidat & 5 étapes avec sauvegarde brouillon \\
+\hline
+Suivi de dossier & Candidat & Statut temps réel avec badges colorés \\
+\hline
+Résultats épreuve & Candidat & Note, rang et résultat (Admis/Recalé) \\
+\hline
+Dashboard responsable & Responsable & KPIs, graphiques Recharts, actions \\
+\hline
+Gestion des dossiers & Responsable & Liste paginée, filtres, tri par score \\
+\hline
+Détail dossier & Responsable & Vue complète avec historique et alertes \\
+\hline
+Configuration admin & Admin & Filières, règles, pondérations \\
+\hline
+Import Excel & Responsable & Wizard 3 étapes avec mapping colonnes \\
+\hline
+Notifications & Tous & Cloche, panneau déroulant, historique \\
+\hline
+\end{tabular}
+\caption{Tableau 24}
+\label{tab:table_24}
+\end{table}
+
+Table 14: Interfaces développées par rôle
+
+\section{Gestion de l'asynchronisme}
+
+\subsection{Problématique}
+
+Plusieurs opérations de la plateforme sont coûteuses en temps d'exécution : le traitement OCR des documents, le calcul des scores, l'envoi d'emails en masse. Un traitement synchrone bloquerait l'interface utilisateur pendant plusieurs secondes.
+
+\subsection{Solution : threading.Thread}
+
+Pour garantir une excellente expérience utilisateur, l'application utilise l'asynchronisme via threading.Thread de Python. Les processus lourds sont exécutés en arrière-plan dans des threads démons. Le flux est le suivant :
+
+\begin{itemize}
+\item Le candidat soumet son dossier → réponse HTTP 200 immédiate
+\item Un thread démon est lancé pour le traitement OCR et le scoring
+\item Le thread ferme correctement sa connexion à la base de données après exécution
+\item Le candidat est redirigé instantanément vers son dashboard
+\item Le statut du dossier est mis à jour en arrière-plan et notifié via WebSocket
+\end{itemize}
+
+\subsection{Gestion des connexions base de données}
+
+Le système veille à clore correctement les connexions à la base de données dans les threads via django.db.connections.close\_all() pour éviter toute fuite de connexion ou conflit d'accès concurrent.
+
+\section{Système de notifications en temps réel}
+
+\subsection{Architecture WebSocket}
+
+Les notifications combinent deux canaux complémentaires :
+
+\begin{itemize}
+\item SMTP (Gmail App Password) : envoi d'emails avec gestion des erreurs et statut persisté
+\item Django Channels + Redis : notifications WebSocket temps réel avec barre de progression pour les envois en masse
+\end{itemize}
+
+\subsection{Envoi en masse avec progression}
+
+Lors de l'envoi de notifications en masse, le backend envoie les emails par batch SMTP et notifie le frontend de la progression en temps réel via WebSocket. Le responsable voit une barre de progression se remplir au fur et à mesure des envois.
+
+\section{Système de logging}
+
+L'application intègre un mécanisme de traçabilité sécurisé par fichiers. La configuration Django dirige les flux vers un fichier central (logs/ensa\_presel.log). Les logs sont structurés par domaine :
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+Logger & Niveau & Usage \\
+\hline
+django & WARNING & Erreurs framework \\
+\hline
+candidatures & INFO & Opérations métier \\
+\hline
+notifications & INFO & Envois email/WebSocket \\
+\hline
+channels & DEBUG & Connexions WebSocket \\
+\hline
+\end{tabular}
+\caption{Tableau 25}
+\label{tab:table_25}
+\end{table}
+
+Table 15: Configuration des loggers
+
+\section{Sécurité de l'application}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+Mesure & Implémentation \\
+\hline
+Authentification & JWT (access 15min + refresh 24h) \\
+\hline
+Autorisation & RBAC à 3 niveaux via @permission\_classes \\
+\hline
+CSRF & Protection Django middleware activée \\
+\hline
+XSS & Échappement automatique Django + React \\
+\hline
+Injection SQL & ORM Django avec requêtes paramétrées \\
+\hline
+Logs sécurisés & Fichier avec rotation, pas de console \\
+\hline
+Confidentialité & Scores OCR masqués côté candidat \\
+\hline
+\end{tabular}
+\caption{Tableau 26}
+\label{tab:table_26}
+\end{table}
+
+Table 16: Mesures de sécurité implémentées
+
+\section{Stratégie de tests}
+
+\subsection{Niveaux de tests}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+Niveau & Objectif & Outils \\
+\hline
+Tests unitaires & Valider chaque composant isolément & Django TestCase \\
+\hline
+Tests d'intégration & Valider les flux complets & APITestCase, APIClient \\
+\hline
+Tests fonctionnels & Valider les scénarios utilisateur & Scénarios manuels \\
+\hline
+Tests d'interface & Valider le responsive et l'UX & Navigateur, DevTools \\
+\hline
+\end{tabular}
+\caption{Tableau 27}
+\label{tab:table_27}
+\end{table}
+
+\subsection{Tests du moteur de règles}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+Test & Entrée & Résultat attendu & Statut \\
+\hline
+Diplôme invalide & DUT non accepté pour TDI & REJETE\_AUTO & OK Passé \\
+\hline
+Moyenne insuffisante & Moyenne 9.5 (seuil 10) & REJETE\_AUTO & OK Passé \\
+\hline
+Doublon CIN & CIN déjà existant & REJETE\_AUTO & OK Passé \\
+\hline
+Dossier conforme & Tous critères OK & EN\_ATTENTE & OK Passé \\
+\hline
+\end{tabular}
+\caption{Tableau 28}
+\label{tab:table_28}
+\end{table}
+
+\subsection{Tests de l'algorithme de scoring}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+Test & Données & Score attendu & Statut \\
+\hline
+Scoring TDI & Moyennes S1-S6, DUT Info & 15.42 & OK Passé \\
+\hline
+Scoring IACS & Moyennes S1-S6, Licence Info & 14.87 & OK Passé \\
+\hline
+Bonus mention TB & Moyenne $\geq$16 & +2.0 bonus & OK Passé \\
+\hline
+\end{tabular}
+\caption{Tableau 29}
+\label{tab:table_29}
+\end{table}
+
+\subsection{Récapitulatif des tests}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+Type de test & Nombre & Passés & Échoués \\
+\hline
+Unitaires & 32 & 32 & 0 \\
+\hline
+Intégration & 12 & 12 & 0 \\
+\hline
+Fonctionnels & 9 & 9 & 0 \\
+\hline
+Interface & 8 & 8 & 0 \\
+\hline
+Total & 61 & 61 & 0 \\
+\hline
+\end{tabular}
+\caption{Tableau 30}
+\label{tab:table_30}
+\end{table}
+
+\textbf{Tableau 4.4 : Récapitulatif des résultats de tests}
+
+\subsection{Couverture de code}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+Module & Couverture \\
+\hline
+users & 89\% \\
+\hline
+candidatures & 92\% \\
+\hline
+administration & 85\% \\
+\hline
+scoring & 94\% \\
+\hline
+notifications & 78\% \\
+\hline
+Global & 87\% \\
+\hline
+\end{tabular}
+\caption{Tableau 31}
+\label{tab:table_31}
+\end{table}
+
+\section{Difficultés rencontrées et solutions}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+Difficulté & Solution apportée \\
+\hline
+WebSocket + JWT expiré & Middleware WebSocket avec refresh automatique du token \\
+\hline
+SMTP Gmail bloqué & Configuration App Password avec gestion des erreurs \\
+\hline
+Imports circulaires Django & Import local dans les méthodes au lieu d'imports globaux \\
+\hline
+OCR faible qualité & Fallback sur moyenne générale + flag SUSPECT \\
+\hline
+Connexions DB dans threads & Appel systématique à connections.close\_all() \\
+\hline
+\end{tabular}
+\caption{Tableau 32}
+\label{tab:table_32}
+\end{table}
+
+Table 17: Difficultés rencontrées et solutions
+
+\section{Conclusion}
+
+Ce chapitre a présenté les aspects concrets de l'implémentation : les 11 interfaces développées, la gestion de l'asynchronisme via threading, le système de notifications WebSocket temps réel, la sécurité robuste et la stratégie de tests complète avec un taux de réussite de 100\% et une couverture de code de 87\%.
+

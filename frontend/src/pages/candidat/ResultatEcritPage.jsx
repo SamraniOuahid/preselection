@@ -25,7 +25,7 @@ export default function ResultatEcritPage() {
 
       // Filter dossiers that have final statuses (post-exam) and are officially published
       const dossiersAvecResultat = dossiersData.filter((d) =>
-        ['ADMIS_FINAL', 'RECALE_FINAL', 'ABSENT_ECRIT'].includes(d.statut) &&
+        ['ADMIS_FINAL', 'RECALE_FINAL', 'ABSENT_ECRIT', 'CONVOQUE_ORAL', 'ORAL_ACCEPTE', 'ORAL_REFUSE', 'INSCRIT'].includes(d.statut) &&
         d.statut_epreuve === 'RESULTATS_PUBLIES'
       );
 
@@ -97,7 +97,7 @@ export default function ResultatEcritPage() {
 function ResultCard({ dossier }) {
   const statut = dossier.statut;
 
-  if (statut === 'ADMIS_FINAL') {
+  if (['ADMIS_FINAL', 'CONVOQUE_ORAL', 'ORAL_ACCEPTE', 'ORAL_REFUSE', 'INSCRIT'].includes(statut)) {
     return (
       <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-2xl border border-green-200 shadow-sm overflow-hidden">
         {/* Success banner */}

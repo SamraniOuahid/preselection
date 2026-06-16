@@ -1,0 +1,78 @@
+\babel@toc {french}{}\relax 
+\contentsline {chapter}{Remerciements}{i}{chapter*.1}%
+\contentsline {chapter}{Résumé}{ii}{chapter*.2}%
+\contentsline {chapter}{Abstract}{iii}{chapter*.3}%
+\contentsline {chapter}{Liste des abréviations}{ix}{chapter*.7}%
+\contentsline {chapter}{Introduction générale}{1}{chapter*.8}%
+\contentsline {chapter}{\numberline {1}Contexte du Projet}{2}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Introduction}{2}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Présentation de l'organisme d'accueil}{2}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}L'ENSA Béni Mellal}{2}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}Missions et offre de formation}{2}{subsection.1.2.2}%
+\contentsline {subsection}{\numberline {1.2.3}Service de la Scolarité}{2}{subsection.1.2.3}%
+\contentsline {section}{\numberline {1.3}Contexte et problématique}{3}{section.1.3}%
+\contentsline {subsection}{\numberline {1.3.1}Le processus actuel de présélection}{3}{subsection.1.3.1}%
+\contentsline {subsection}{\numberline {1.3.2}Problèmes identifiés}{3}{subsection.1.3.2}%
+\contentsline {subsection}{\numberline {1.3.3}Le système LMD marocain}{3}{subsection.1.3.3}%
+\contentsline {section}{\numberline {1.4}Objectifs du projet}{4}{section.1.4}%
+\contentsline {subsection}{\numberline {1.4.1}Objectif principal}{4}{subsection.1.4.1}%
+\contentsline {subsection}{\numberline {1.4.2}Objectifs spécifiques}{4}{subsection.1.4.2}%
+\contentsline {section}{\numberline {1.5}Périmètre fonctionnel}{4}{section.1.5}%
+\contentsline {section}{\numberline {1.6}Méthodologie de travail}{4}{section.1.6}%
+\contentsline {section}{\numberline {1.7}Conclusion}{5}{section.1.7}%
+\contentsline {chapter}{\numberline {2}Architecture et Base de données}{6}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Introduction}{6}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Architecture globale}{6}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}Vue d'ensemble}{6}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}Architecture REST stateless}{7}{subsection.2.2.2}%
+\contentsline {section}{\numberline {2.3}Stack technologique}{8}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Organisation modulaire du backend}{8}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Dictionnaire des modèles Django}{8}{section.2.5}%
+\contentsline {subsection}{\numberline {2.5.1}Application Users}{10}{subsection.2.5.1}%
+\contentsline {subsection}{\numberline {2.5.2}Application Candidatures}{10}{subsection.2.5.2}%
+\contentsline {subsection}{\numberline {2.5.3}Application Administration et Scoring}{10}{subsection.2.5.3}%
+\contentsline {section}{\numberline {2.6}Relations et cardinalités}{13}{section.2.6}%
+\contentsline {section}{\numberline {2.7}Machine d'états du dossier}{13}{section.2.7}%
+\contentsline {section}{\numberline {2.8}Conclusion}{13}{section.2.8}%
+\contentsline {chapter}{\numberline {3}Logique Métier et Algorithmes}{15}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Introduction}{15}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Moteur de règles de rejet automatique}{15}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Principe de fonctionnement}{15}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Types de règles implémentés}{15}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}Journalisation des rejets}{16}{subsection.3.2.3}%
+\contentsline {section}{\numberline {3.3}Algorithme de scoring pondéré par filière}{16}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Principe général}{16}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Coefficients des quatre filières}{16}{subsection.3.3.2}%
+\contentsline {subsection}{\numberline {3.3.3}Formule de calcul du score dossier}{16}{subsection.3.3.3}%
+\contentsline {subsection}{\numberline {3.3.4}Bonus de mention et coefficient diplôme}{17}{subsection.3.3.4}%
+\contentsline {subsection}{\numberline {3.3.5}Formule du score final}{18}{subsection.3.3.5}%
+\contentsline {section}{\numberline {3.4}Pipeline OCR et Fuzzy Matching}{18}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}Extraction OCR}{18}{subsection.3.4.1}%
+\contentsline {subsection}{\numberline {3.4.2}Nettoyage du bruit OCR}{19}{subsection.3.4.2}%
+\contentsline {subsection}{\numberline {3.4.3}Fuzzy Matching des matières}{19}{subsection.3.4.3}%
+\contentsline {subsection}{\numberline {3.4.4}Scoring avec fallback}{19}{subsection.3.4.4}%
+\contentsline {section}{\numberline {3.5}Calcul automatique des mentions}{19}{section.3.5}%
+\contentsline {section}{\numberline {3.6}Conclusion}{20}{section.3.6}%
+\contentsline {chapter}{\numberline {4}Implémentation, Asynchronisme et Tests}{21}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Introduction}{21}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Interfaces développées}{21}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Gestion de l'asynchronisme}{21}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Problématique}{21}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Solution : threading.Thread}{24}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}Gestion des connexions base de données}{24}{subsection.4.3.3}%
+\contentsline {section}{\numberline {4.4}Système de notifications en temps réel}{24}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Architecture WebSocket}{24}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}Envoi en masse avec progression}{25}{subsection.4.4.2}%
+\contentsline {section}{\numberline {4.5}Système de logging}{25}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Sécurité de l'application}{25}{section.4.6}%
+\contentsline {section}{\numberline {4.7}Stratégie de tests}{27}{section.4.7}%
+\contentsline {subsection}{\numberline {4.7.1}Niveaux de tests}{27}{subsection.4.7.1}%
+\contentsline {subsection}{\numberline {4.7.2}Tests du moteur de règles}{27}{subsection.4.7.2}%
+\contentsline {subsection}{\numberline {4.7.3}Tests de l'algorithme de scoring}{27}{subsection.4.7.3}%
+\contentsline {subsection}{\numberline {4.7.4}Récapitulatif des tests}{27}{subsection.4.7.4}%
+\contentsline {subsection}{\numberline {4.7.5}Couverture de code}{27}{subsection.4.7.5}%
+\contentsline {section}{\numberline {4.8}Difficultés rencontrées et solutions}{27}{section.4.8}%
+\contentsline {section}{\numberline {4.9}Conclusion}{27}{section.4.9}%
+\contentsline {chapter}{Conclusion générale}{28}{chapter*.55}%
+\contentsline {section}{Perspectives d'amélioration}{28}{section*.56}%
+\contentsline {chapter}{Bibliographie}{28}{section*.56}%

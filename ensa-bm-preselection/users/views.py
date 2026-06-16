@@ -59,9 +59,17 @@ class RegisterView(generics.CreateAPIView):
             # En environnement dev, si l'email n'est pas bien configuré, on l'affiche au moins en console ou on ignore.
             pass
 
+        # Generate JWT tokens for the new user
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
+        token_data = {
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+        }
         return Response({
             "message": "Compte créé avec succès. Un e-mail de confirmation vous a été envoyé.",
-            "user": UserSerializer(user).data
+            "user": UserSerializer(user).data,
+            "tokens": token_data,
         }, status=status.HTTP_201_CREATED)
 
 

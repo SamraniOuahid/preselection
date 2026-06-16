@@ -62,24 +62,36 @@ ASGI_APPLICATION = 'config.asgi.application'
 
 # ── Base de données ─────────────────────────────────────────────────
 # PostgreSQL en production (USE_POSTGRES=True), SQLite en dev (par défaut)
-if config('USE_POSTGRES', default=False, cast=bool):
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME':     config('DB_NAME'),
-            'USER':     config('DB_USER'),
-            'PASSWORD': config('DB_PASSWORD'),
-            'HOST':     config('DB_HOST', default='localhost'),
-            'PORT':     config('DB_PORT', default='5432'),
-        }
-    }
-else:
+import sys
+
+# Determine if we are running tests
+if 'test' in sys.argv:
+    # Use SQLite in-memory database for tests to avoid permission issues
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': ':memory:',
         }
     }
+else:
+    if config('USE_POSTGRES', default=False, cast=bool):
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME':     config('DB_NAME'),
+                'USER':     config('DB_USER'),
+                'PASSWORD': config('DB_PASSWORD'),
+                'HOST':     config('DB_HOST', default='localhost'),
+                'PORT':     config('DB_PORT', default='5432'),
+            }
+        }
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 # ── Auth personnalisé ───────────────────────────────────────────────
 AUTH_USER_MODEL = 'users.User'
 

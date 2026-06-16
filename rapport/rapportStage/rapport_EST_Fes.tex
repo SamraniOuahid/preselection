@@ -1,0 +1,189 @@
+\documentclass[12pt,a4paper]{report}
+
+% --- 1. CONFIGURATION DU PRÉAMBULE & STYLE ---
+% Encodage et Langue
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+% Police obligatoire : Latin Modern Roman
+\usepackage{lmodern}
+
+% Marges : uniformes de 25 mm
+\usepackage[margin=25mm]{geometry}
+
+% Interligne : 1.15
+\usepackage{setspace}
+\setstretch{1.15}
+
+% Légendes : "Fig [X]:" au lieu de "Figure"
+% (l'utilisation de \addto\captionsfrench est nécessaire car babel/french redéfinit \figurename au \begin{document})
+\addto\captionsfrench{
+  \renewcommand{\figurename}{Fig}
+  \renewcommand{\tablename}{Tableau}
+}
+
+% Alignement : justifié par défaut en LaTeX.
+% (Aucune commande spéciale n'est nécessaire)
+
+% Packages utiles pour la page de garde et la mise en forme
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{calc}
+\usepackage{amssymb}
+
+% --- 2. TAILLE DES TITRES (Package titlesec) ---
+\usepackage{titlesec}
+
+% Titres de chapitres, Intro et Conclusion : 18 points, Gras
+\titleformat{\chapter}[display]
+  {\normalfont\fontsize{18}{22}\bfseries}
+  {\chaptertitlename\ \thechapter}
+  {20pt}
+  {}
+
+% Titres de sections : 14 points, Gras
+\titleformat{\section}
+  {\normalfont\fontsize{14}{17}\bfseries}
+  {\thesection}{1em}{}
+
+% Titres de sous-sections : 12 points, Gras
+\titleformat{\subsection}
+  {\normalfont\fontsize{12}{15}\bfseries}
+  {\thesubsection}{1em}{}
+
+\begin{document}
+
+% --- 3. PAGE DE COUVERTURE OFFICIELLE (titlepage) ---
+\begin{titlepage}
+    \centering
+    
+    % En-tête : Université et École
+    {\fontsize{18}{22}\bfseries UNIVERSITÉ SIDI MOHAMED BEN ABDELLAH DE FÈS\par}
+    \vspace{0.5cm}
+    {\fontsize{16}{20}\bfseries ÉCOLE SUPÉRIEURE DE TECHNOLOGIE - FÈS\par}
+    
+    \vspace{1.5cm}
+    % =========================================================
+    % EMPLACEMENT DES LOGOS :
+    % Décommentez le bloc ci-dessous pour inclure vos logos.
+    % =========================================================
+    % \begin{minipage}{0.45\textwidth}
+    %     \begin{flushleft}
+    %         \includegraphics[width=4cm]{chemin/vers/logo_est.png}
+    %     \end{flushleft}
+    % \end{minipage}
+    % \begin{minipage}{0.45\textwidth}
+    %     \begin{flushright}
+    %         \includegraphics[width=4cm]{chemin/vers/logo_entreprise.png}
+    %     \end{flushright}
+    % \end{minipage}\par
+    % \vspace{1.5cm}
+    
+    % Type de document
+    {\fontsize{26}{32}\bfseries RAPPORT DE STAGE\par}
+    \vspace{1.5cm}
+    
+    % Diplôme et Filière
+    {\fontsize{14}{17}\bfseries DIPLÔME BACHELOR EN TECHNOLOGIE\par}
+    \vspace{0.5cm}
+    {\fontsize{14}{17}\bfseries FILIÈRE : GÉNIE LOGICIEL (GL)\par}
+    
+    \vspace{2cm}
+    
+    % Sujet (mis en valeur dans un cadre)
+    \begin{center}
+        \fbox{
+            \begin{minipage}{0.95\textwidth}
+                \centering
+                \vspace{0.4cm}
+                {\fontsize{16}{20}\bfseries Conception et Développement d'une Plateforme Intelligente de Présélection des Candidats\par}
+                \vspace{0.4cm}
+            \end{minipage}
+        }
+    \end{center}
+    
+    \vspace{2.5cm}
+    
+    % Réalisé par
+    {\large \textbf{Réalisé par :}\\ SAMRANI OUAHID\par}
+    
+    \vspace{1.5cm}
+    
+    % Jury
+    {\large \textbf{Soutenu devant le jury :}\par}
+    \vspace{0.5cm}
+    \begin{center}
+    \begin{tabular}{ll}
+        \textbf{M. YOUNES AZIZ BACHIRI} & (Encadrant académique) \\
+        \textbf{M. DAHBI MAROUANE} & (Encadrant entreprise) \\
+    \end{tabular}
+    \end{center}
+    
+    \vfill
+    
+    % Pied de page
+    {\large \textbf{Lieu de stage :} ENSA Béni Mellal — USMS\par}
+    \vspace{0.2cm}
+    {\large \textbf{Période :} Du 06/04/2026 au 13/06/2026\par}
+    \vspace{0.2cm}
+    {\large \textbf{Année Universitaire :} 2025-2026\par}
+    
+\end{titlepage}
+
+% --- 4. STRUCTURE ET ORDRE DES PAGES ---
+
+% Numérotation romaine pour les pages avant le contenu principal
+\pagenumbering{roman}
+
+% 2. Remerciements (Non numéroté)
+\chapter*{Remerciements}
+\addcontentsline{toc}{chapter}{Remerciements}
+Vos remerciements ici...
+
+% 3. Résumé & Abstract (Non numéroté)
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+Votre résumé en français ici...
+
+\vspace{1cm}
+\begin{center}
+    \textbf{\Large Abstract}
+\end{center}
+Your abstract in English here...
+
+% 4. Table des matières automatique
+\tableofcontents
+
+% 5. Liste des figures
+\listoffigures
+
+% 6. Liste des tableaux
+\listoftables
+
+% 7. Liste des abréviations
+\chapter*{Liste des abréviations}
+\addcontentsline{toc}{chapter}{Liste des abréviations}
+\begin{description}
+    \item[GL] Génie Logiciel
+    \item[EST] École Supérieure de Technologie
+    \item[USMS] Université Sultan Moulay Slimane
+    \item[ENSA] École Nationale des Sciences Appliquées
+    % Ajoutez vos autres abréviations ici
+\end{description}
+
+% 8. Forcer le démarrage de la numérotation arabe
+\clearpage
+\pagenumbering{arabic}
+
+
+\input{chapitres/01_introduction.tex}
+
+\input{chapitres/02_contexte.tex}
+
+\input{chapitres/03_architecture.tex}
+
+\end{document}

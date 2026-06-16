@@ -1,0 +1,25 @@
+\babel@toc {french}{}\relax 
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {2.1}{Fiche signalétique de l\textquotesingle ENSA BM}}{2}{}%
+\contentsline {table}{\numberline {2.2}{Filières d\textquotesingle ingénieur de l\textquotesingle ENSA BM}}{3}{}%
+\contentsline {table}{\numberline {2.4}{Périmètre fonctionnel du projet}}{5}{}%
+\contentsline {table}{\numberline {2.5}{Planning prévisionnel du projet}}{5}{}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{Stack technologique du projet}}{8}{}%
+\contentsline {table}{\numberline {3.2}{Applications Django du backend}}{9}{}%
+\contentsline {table}{\numberline {3.3}{Services métier du module candidatures}}{9}{}%
+\contentsline {table}{\numberline {3.10}{Modèles d\textquotesingle administration et scoring}}{13}{}%
+\contentsline {table}{\numberline {3.11}{Relations et cardinalités du modèle de données}}{13}{}%
+\contentsline {table}{\numberline {3.12}{Tableau 2.6 : Machine d\textquotesingle états du dossier de candidature}}{14}{}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{Les 7 types de règles de rejet automatique}}{16}{}%
+\contentsline {table}{\numberline {4.2}{Matrice des pondérations par filière}}{18}{}%
+\contentsline {table}{\numberline {4.5}{Corrections automatiques du bruit OCR}}{21}{}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{Interfaces développées par rôle}}{23}{}%
+\contentsline {table}{\numberline {5.2}{Configuration des loggers}}{28}{}%
+\contentsline {table}{\numberline {5.3}{Mesures de sécurité implémentées}}{28}{}%
+\contentsline {table}{\numberline {5.9}{Difficultés rencontrées et solutions}}{30}{}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }

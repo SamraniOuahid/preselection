@@ -1,0 +1,179 @@
+% ============================================================================
+%  sections/chapitre1.tex
+% ============================================================================
+\chapter{Contexte du Projet}
+\label{chapitre-1-contexte-du-projet}
+
+\section{Introduction}
+\label{introduction}
+
+Ce chapitre présente le cadre général dans lequel s'inscrit notre stage de fin d'études. Nous y décrivons l'organisme d'accueil, le contexte institutionnel, la problématique identifiée et les objectifs du projet.
+
+\section{Présentation de l'organisme d'accueil}
+\label{presentation-de-lorganisme-daccueil}
+
+\subsection{L'ENSA Béni Mellal}
+\label{lensa-beni-mellal}
+
+L'École Nationale des Sciences Appliquées de Béni Mellal (ENSA BM) est un établissement public d'enseignement supérieur rattaché à l'Université Sultan Moulay Slimane (USMS). Créée en 2003 par décret ministériel n° 2-03-200, elle fait partie du réseau des douze ENSA marocaines et forme des ingénieurs d'État dans les domaines des sciences appliquées.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Fiche signalétique de l'ENSA BM}
+  \begin{tabularx}{\textwidth}{@{} >{\bfseries}l X @{}}
+    \toprule
+    \textbf{Rubrique} & \textbf{Information} \\
+    \midrule
+    Dénomination & École Nationale des Sciences Appliquées de Béni Mellal \\
+    Sigle & ENSA BM \\
+    Université & Université Sultan Moulay Slimane (USMS) \\
+    Statut & Établissement public d'enseignement supérieur \\
+    Création & 2003 --- Décret n° 2-03-200 \\
+    Effectif étudiants & \textasciitilde2 500 (2024-2025) \\
+    Enseignants & \textasciitilde120 enseignants-chercheurs \\
+    \bottomrule
+  \end{tabularx}
+  \label{tab:fiche-ensa}
+\end{table}
+
+\subsection{Missions et offre de formation}
+\label{missions-et-offre-de-formation}
+
+L'ENSA BM a pour mission de former des ingénieurs d'État polyvalents, de développer la recherche scientifique et l'innovation technologique, et de contribuer au développement socio-économique de la région Béni Mellal-Khénifra.
+
+L'école propose quatre filières d'ingénieur accessibles aux niveaux Bac+2 et Bac+3 :
+
+\begin{table}[htbp]
+  \centering
+  \caption{Filières d'ingénieur de l'ENSA BM}
+  \begin{tabularx}{\textwidth}{@{} l X c @{}}
+    \toprule
+    \textbf{Code} & \textbf{Filière} & \textbf{Places} \\
+    \midrule
+    TDI & Télécommunications et Développement Informatique & 30 \\
+    IACS & Informatique Appliquée et Cybersécurité & 30 \\
+    IAA & Ingénierie Agro-Alimentaire & 30 \\
+    G2ER & Génie de l'Énergie et Énergies Renouvelables & 30 \\
+    \bottomrule
+  \end{tabularx}
+  \label{tab:filieres}
+\end{table}
+
+\subsection{Service de la Scolarité}
+\label{service-de-la-scolarite}
+
+Le service de la Scolarité gère l'ensemble des processus administratifs liés aux étudiants : inscriptions, examens, stages, diplomation et présélection des candidats au cycle ingénieur. C'est le principal bénéficiaire et commanditaire de notre plateforme.
+
+\section{Contexte et problématique}
+\label{contexte-et-problematique}
+
+\subsection{Le processus actuel de présélection}
+\label{le-processus-actuel-de-preselection}
+
+Le processus actuel de présélection à l'ENSA BM se déroule en plusieurs étapes manuelles : (1) réception des dossiers physiques ou par email, (2) vérification manuelle de la conformité des pièces, (3) saisie des notes dans un fichier Excel, (4) tri et classement manuel, (5) convocation à l'épreuve écrite, et (6) saisie des notes d'épreuve et classement final. Ce processus mobilise plusieurs agents pendant plusieurs semaines.
+
+\subsection{Problèmes identifiés}
+\label{problemes-identifies}
+
+\begin{itemize}
+  \item Traitement lent et chronophage : plusieurs semaines pour quelques centaines de dossiers
+  \item Risque élevé d'erreurs de saisie lors de la transcription manuelle des notes
+  \item Absence totale de traçabilité des décisions prises
+  \item Manque de transparence : les candidats n'ont aucune visibilité sur l'état de leur dossier
+  \item Doublons non détectés : difficulté d'identifier les candidatures multiples
+  \item Classement approximatif : calculs manuels sujets à erreur
+\end{itemize}
+
+\subsection{Le système LMD marocain}
+\label{le-systeme-lmd-marocain}
+
+Le système LMD marocain structure les études supérieures en trois cycles. Chaque semestre est évalué sur 20 points. Les mentions sont attribuées selon les seuils suivants :
+
+\begin{table}[htbp]
+  \centering
+  \caption{Seuils des mentions LMD}
+  \begin{tabular}{@{} l l @{}}
+    \toprule
+    \textbf{Moyenne} & \textbf{Mention} \\
+    \midrule
+    $\ge$ 16.00 & Très Bien \\
+    $\ge$ 14.00 & Bien \\
+    $\ge$ 12.00 & Assez Bien \\
+    $\ge$ 10.00 & Passable \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:mentions-lmd}
+\end{table}
+
+Notre plateforme doit impérativement respecter ces seuils pour le calcul automatique des mentions et du scoring académique.
+
+\section{Objectifs du projet}
+\label{objectifs-du-projet}
+
+\subsection{Objectif principal}
+\label{objectif-principal}
+
+Concevoir et développer une plateforme web complète permettant d'automatiser et de fiabiliser le processus de présélection des candidats aux filières d'ingénieur de l'ENSA BM.
+
+\subsection{Objectifs spécifiques}
+\label{objectifs-specifiques}
+
+\begin{itemize}
+  \item Automatisation du rejet des dossiers non conformes via un moteur de règles configurable
+  \item Scoring académique pondéré par filière avec fuzzy matching des matières
+  \item Classement automatique des candidats intégrant dossier (40\%) et épreuve écrite (60\%)
+  \item Notifications en temps réel via WebSocket et email SMTP
+  \item Traçabilité et audit complet du processus de présélection
+  \item Import des notes d'épreuve écrite au format Excel
+\end{itemize}
+
+\section{Périmètre fonctionnel}
+\label{perimetre-fonctionnel}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Périmètre fonctionnel du projet}
+  \begin{tabularx}{\textwidth}{@{} X c @{}}
+    \toprule
+    \textbf{Fonctionnalité} & \textbf{Inclus} \\
+    \midrule
+    Inscription et authentification JWT & Oui \\
+    Dépôt de dossier multi-étapes & Oui \\
+    Moteur de règles de rejet automatique & Oui \\
+    Scoring pondéré par filière & Oui \\
+    Dashboard responsable avec KPIs & Oui \\
+    Import notes Excel & Oui \\
+    Notifications WebSocket + SMTP & Oui \\
+    Export résultats Excel & Oui \\
+    Application mobile native & Non (hors scope) \\
+    Intégration Massar & Non (hors scope) \\
+    \bottomrule
+  \end{tabularx}
+  \label{tab:perimetre-fonctionnel}
+\end{table}
+
+\section{Méthodologie de travail}
+\label{methodologie-de-travail}
+
+Nous avons adopté une approche agile itérative, organisée en sprints hebdomadaires sur 4 semaines. Chaque sprint produit un incrément fonctionnel testé et validé.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Planning prévisionnel du projet}
+  \begin{tabularx}{\textwidth}{@{} l l X @{}}
+    \toprule
+    \textbf{Semaine} & \textbf{Phase} & \textbf{Livrables} \\
+    \midrule
+    S1 & Fondations Backend & Modèles Django, API REST, Auth JWT \\
+    S2 & Intelligence métier & Moteur de règles, Scoring, OCR \\
+    S3 & Frontend React & Pages candidat, Dashboard, Formulaires \\
+    S4 & Tests et finalisation & Tests, Corrections, Documentation \\
+    \bottomrule
+  \end{tabularx}
+  \label{tab:planning}
+\end{table}
+
+\section{Conclusion}
+\label{conclusion-ch1}
+
+Ce chapitre a permis de situer le cadre institutionnel de notre stage et de définir clairement la problématique et les objectifs du projet. Le chapitre suivant présentera l'architecture technique et le modèle de données de la plateforme.

@@ -219,10 +219,9 @@ def _generer_corps_admis_final(dossier, filiere):
     score_final = float(dossier.score_final) if dossier.score_final else '—'
 
     # Infos oral
-    epreuve = note_obj.epreuve if note_obj else None
-    date_oral = epreuve.date_oral if epreuve and epreuve.date_oral else None
-    lieu_oral = epreuve.lieu_oral if epreuve and epreuve.lieu_oral else 'ENSA Béni Mellal'
-    heure_oral = epreuve.heure_oral if epreuve and epreuve.heure_oral else '09:00'
+    date_oral = filiere.date_oral if filiere and filiere.date_oral else None
+    lieu_oral = filiere.lieu_oral if filiere and filiere.lieu_oral else 'ENSA Béni Mellal'
+    heure_oral = date_oral.strftime('%H:%M') if date_oral else '09:00'
 
     if date_oral:
         jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']

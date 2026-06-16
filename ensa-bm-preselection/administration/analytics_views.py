@@ -149,26 +149,58 @@ class AdminAnalyticsStatsView(generics.GenericAPIView):
         # ════════════════════════════════════════════════
         # 5. CORRÉLATION & DÉTECTION FRAUDES (Scatter)
         # ════════════════════════════════════════════════
-        # Croiser note_declaree vs note_extraite (NoteMatiere legacy)
+        # Stratégie primaire : utiliser NoteMatiere si des données existent (legacy seed_data)
+        # Stratégie fallback  : croiser moyenne_generale (déclarée) vs moyenne NoteSemestre (extraite)
+        from candidatures.models import NoteSemestre
+        from django.db.models import Avg
+
         scatter_data = list(
             NoteMatiere.objects.filter(
                 note_declaree__isnull=False,
                 note_extraite__isnull=False
             ).values(
                 'note_declaree', 'note_extraite', 'is_suspect', 'matiere', 'ecart'
-            )[:500]  # Limiter pour la performance
+            )[:500]
         )
 
-        fraude_scatter = [
-            {
-                'note_declaree': float(d['note_declaree']),
-                'note_extraite': float(d['note_extraite']),
-                'is_suspect': d['is_suspect'],
-                'matiere': d['matiere'],
-                'ecart': float(d['ecart']) if d['ecart'] is not None else 0,
-            }
-            for d in scatter_data
-        ]
+        if scatter_data:
+            fraude_scatter = [
+                {
+                    'note_declaree': float(d['note_declaree']),
+                    'note_extraite': float(d['note_extraite']),
+                    'is_suspect': d['is_suspect'],
+                    'matiere': d['matiere'],
+                    'ecart': float(d['ecart']) if d['ecart'] is not None else 0,
+                }
+                for d in scatter_data
+            ]
+        else:
+            # Fallback : comparer moyenne_generale déclarée vs moyenne des NoteSemestre
+            # (note extraite = moyenne pondérée des semestres calculée par le système)
+            dossiers_avec_notes = (
+                Dossier.objects.filter(
+                    moyenne_generale__isnull=False,
+                )
+                .annotate(moyenne_semestres=Avg('notes_semestres__moyenne'))
+                .filter(moyenne_semestres__isnull=False)
+                .values(
+                    'moyenne_generale', 'moyenne_semestres',
+                    'is_suspect', 'filiere__code',
+                )[:500]
+            )
+
+            fraude_scatter = []
+            for d in dossiers_avec_notes:
+                note_dec = float(d['moyenne_generale'])
+                note_ext = round(float(d['moyenne_semestres']), 2)
+                ecart = round(abs(note_dec - note_ext), 2)
+                fraude_scatter.append({
+                    'note_declaree': note_dec,
+                    'note_extraite': note_ext,
+                    'is_suspect': d['is_suspect'] or ecart > 0.5,
+                    'matiere': d['filiere__code'] or 'N/A',
+                    'ecart': ecart,
+                })
 
         # ════════════════════════════════════════════════
         # 6. COURBE DE CROISSANCE DES INSCRIPTIONS (par jour)

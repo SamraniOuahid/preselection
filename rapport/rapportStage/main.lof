@@ -1,0 +1,20 @@
+\babel@toc {french}{}\relax 
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Diagramme de cas d'utilisation global de la plateforme}}{6}{figure.caption.14}%
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Architecture générale de la plateforme de présélection}}{7}{figure.caption.15}%
+\contentsline {figure}{\numberline {2.3}{\ignorespaces Organisation modulaire du backend Django}}{9}{figure.caption.19}%
+\contentsline {figure}{\numberline {2.4}{\ignorespaces Diagramme de classes de la plateforme}}{11}{figure.caption.24}%
+\contentsline {figure}{\numberline {2.5}{\ignorespaces Machine d'états du dossier de candidature}}{14}{figure.caption.30}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Fonctionnement du moteur de rejet automatique}}{16}{figure.caption.32}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Processus de calcul du score pondéré}}{17}{figure.caption.34}%
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Pipeline OCR et traitement des relevés de notes}}{18}{figure.caption.37}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Interface d'accueil de la plateforme}}{22}{figure.caption.40}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Formulaire candidature}}{22}{figure.caption.41}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Interface de dépôt des documents justificatifs}}{22}{figure.caption.42}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Tableau de bord du responsable de présélection}}{23}{figure.caption.43}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Consultation détaillée d'un dossier candidat}}{23}{figure.caption.44}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Configuration des filières et règles de scoring}}{23}{figure.caption.45}%
+\contentsline {figure}{\numberline {4.7}{\ignorespaces Tableau de bord analytique du responsable de présélection}}{24}{figure.caption.46}%

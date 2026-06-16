@@ -65,8 +65,7 @@ export default function ModifierDossierPage() {
             annee_obtention: data.annee_obtention,
             mention: data.mention || '',
             moyenne_generale: data.moyenne_generale,
-            code_massar: data.code_massar || '',
-            cne: data.cne || '',
+            code_massar: data.code_massar || data.cne || '',
           });
           setNotesSemestres(
             data.notes_semestres?.length
@@ -95,7 +94,7 @@ export default function ModifierDossierPage() {
     mention: data.mention || '',
     moyenne_generale: parseFloat(data.moyenne_generale),
     code_massar: data.code_massar,
-    cne: data.cne,
+    cne: data.code_massar,
     notes_semestres: notesSemestres.map(n => ({ ...n, moyenne: parseFloat(n.moyenne) })),
   });
 
@@ -215,15 +214,15 @@ export default function ModifierDossierPage() {
           </div>
 
           <div>
-            <label className="label">Code Massar</label>
-            <input className={`input font-mono ${errors.code_massar ? 'input-error' : ''}`} placeholder="R123456789" {...register('code_massar', { required: 'Obligatoire' })} />
+            <label className="label">Code Massar / CNE</label>
+            <input className={`input font-mono ${errors.code_massar ? 'input-error' : ''}`} placeholder="R123456789" {...register('code_massar', {
+              required: 'Obligatoire',
+              pattern: {
+                value: /^[A-Za-z]\d{9}$/,
+                message: 'Format invalide (ex: R123456789 — 1 lettre + 9 chiffres)'
+              }
+            })} />
             {errors.code_massar && <p className="error-text">{errors.code_massar.message}</p>}
-          </div>
-
-          <div>
-            <label className="label">CNE</label>
-            <input className={`input font-mono ${errors.cne ? 'input-error' : ''}`} placeholder="1234567890" {...register('cne', { required: 'Obligatoire' })} />
-            {errors.cne && <p className="error-text">{errors.cne.message}</p>}
           </div>
         </div>
 

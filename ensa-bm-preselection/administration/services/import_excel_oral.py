@@ -46,7 +46,7 @@ _COLONNES_VALIDES = {'cne', 'code_massar', 'id'}
 
 def _detecter_colonne_sans_erreur(headers: list[str]) -> str | None:
     """Renvoie la première colonne valide trouvée, ou None."""
-    for col in ('cne', 'code_massar', 'id'):
+    for col in ('cne', 'code_massar', 'id', 'cin'):
         if col in headers:
             return col
     return None
@@ -159,11 +159,11 @@ def _lire_lignes_csv(fichier) -> tuple[str, list[dict]]:
 
 def _detecter_colonne(headers: list[str]) -> str:
     """Renvoie la première colonne valide trouvée, ou lève ValidationError."""
-    for col in ('cne', 'code_massar', 'id'):
+    for col in ('cne', 'code_massar', 'id', 'cin'):
         if col in headers:
             return col
     raise ValidationError(
-        f"Colonnes obligatoires manquantes. Colonne attendue : 'cne', 'code_massar' ou 'id'. "
+        f"Colonnes obligatoires manquantes. Colonne attendue : 'cne', 'code_massar', 'id' ou 'cin'. "
         f"Colonnes trouvées : {', '.join(headers) or '(aucune)'}."
     )
 
@@ -226,7 +226,7 @@ def importer_admis_oral_depuis_fichier(
     rang_base = epreuve.convocations.count()
 
     # Statuts autorisés comme candidats importables
-    statuts_importables = [Dossier.Statut.ADMIS_FINAL, Dossier.Statut.PRESELECTIONNE]
+    statuts_importables = [Dossier.Statut.ADMIS_FINAL, Dossier.Statut.PRESELECTIONNE, Dossier.Statut.CONVOQUE_ORAL, Dossier.Statut.ORAL_ACCEPTE]
 
     traites = 0
     convoques = 0
@@ -324,7 +324,7 @@ def importer_admis_oral_depuis_fichier(
 def _chercher_dossier(identifiant: str, colonne: str, filiere, statuts_importables):
     """
     Renvoie le Dossier correspondant ou None si introuvable / statut incompatible.
-    Cherche par CNE, code_massar ou UUID selon `colonne`.
+    Cherche par CNE, code_massar, CIN ou UUID selon `colonne`.
     """
     qs = Dossier.objects.filter(filiere=filiere, statut__in=statuts_importables)
 
@@ -333,10 +333,43 @@ def _chercher_dossier(identifiant: str, colonne: str, filiere, statuts_importabl
             return qs.get(cne__iexact=identifiant)
         elif colonne == 'code_massar':
             return qs.get(code_massar__iexact=identifiant)
+        elif colonne == 'cin':
+            return qs.get(candidat__user__cin__iexact=identifiant)
         elif colonne == 'id':
-            return qs.get(id=identifiant)
+            import uuid
+            try:
+                uuid_val = uuid.UUID(identifiant)
+                return qs.get(id=uuid_val)
+            except ValueError:
+                # Si 'id' n'est pas un UUID, on tente CIN (fallback commun)
+                return qs.get(candidat__user__cin__iexact=identifiant)
     except Dossier.DoesNotExist:
+        # Essayer une dernière fois de chercher globalement sur n'importe quel champ
+        try:
+            from django.db.models import Q
+            return qs.get(
+                Q(cne__iexact=identifiant) | 
+                Q(code_massar__iexact=identifiant) | 
+                Q(candidat__user__cin__iexact=identifiant)
+            )
+        except:
+            return None
+    except Dossier.MultipleObjectsReturned:
+        logger.warning("Recherche ambiguë pour '%s' : plusieurs dossiers trouvés. Le premier sera utilisé.", identifiant)
+        if colonne == 'cne':
+            return qs.filter(cne__iexact=identifiant).first()
+        elif colonne == 'code_massar':
+            return qs.filter(code_massar__iexact=identifiant).first()
+        elif colonne == 'cin':
+            return qs.filter(candidat__user__cin__iexact=identifiant).first()
+        elif colonne == 'id':
+            import uuid
+            try:
+                uuid_val = uuid.UUID(identifiant)
+                return qs.filter(id=uuid_val).first()
+            except ValueError:
+                return qs.filter(candidat__user__cin__iexact=identifiant).first()
         return None
-    except (Dossier.MultipleObjectsReturned, Exception) as exc:
-        logger.warning("Recherche ambiguë pour '%s' : %s", identifiant, exc)
+    except Exception as exc:
+        logger.warning("Recherche erreur pour '%s' : %s", identifiant, exc)
         return None

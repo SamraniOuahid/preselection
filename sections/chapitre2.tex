@@ -1,0 +1,369 @@
+\chapter{Architecture et Base de données}
+
+\section{Introduction}
+
+Ce chapitre détaille l'architecture technique de la plateforme, le choix des technologies, l'organisation modulaire du code et le dictionnaire complet des modèles Django.
+
+\section{Architecture globale}
+
+\subsection{Vue d'ensemble}
+
+L'application repose sur une architecture moderne Full-Stack Client-Serveur à trois niveaux :
+
+\begin{itemize}
+\item Frontend : React 18 compilé via Vite, avec Tailwind CSS pour le rendu responsive. L'architecture s'appuie sur des composants réutilisables, React Router v6 et un state management optimisé via Context API.
+\item Backend : Django 4.2 LTS et Django REST Framework (DRF), exposant une API REST sécurisée par JWT (SimpleJWT). Le backend est organisé en 5 applications Django indépendantes.
+\item Base de données : PostgreSQL 15 géré par l'ORM Django, assurant la persistance des candidatures, configurations et historiques.
+\item Temps réel : Django Channels 4.0 avec Redis comme channel layer pour les WebSockets (notifications en temps réel avec barre de progression).
+\end{itemize}
+
+\subsection{Architecture REST stateless}
+
+Le frontend communique avec le backend exclusivement via des endpoints REST sécurisés par JWT. Les réponses sont au format JSON. Le pattern est strictement stateless côté serveur, à l'exception des connexions WebSocket persistantes pour les notifications.
+
+\section{Stack technologique}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+Technologie & Version & Rôle \\
+\hline
+Django & 4.2 LTS & Framework backend principal \\
+\hline
+Django REST Framework & 3.17 & Construction de l'API REST \\
+\hline
+Django Channels & 4.0 & WebSockets temps réel \\
+\hline
+SimpleJWT & 5.5 & Authentification par tokens JWT \\
+\hline
+React & 18 & Framework frontend SPA \\
+\hline
+Tailwind CSS & 3.x & Framework CSS utilitaire \\
+\hline
+PostgreSQL & 15 & Base de données relationnelle \\
+\hline
+Redis & 7.x & Channel Layer WebSocket \\
+\hline
+pdfplumber + pytesseract & — & Extraction OCR \\
+\hline
+fuzzywuzzy & 0.18 & Correspondance floue des matières \\
+\hline
+openpyxl & — & Import/Export Excel \\
+\hline
+\end{tabular}
+\caption{Tableau 7}
+\label{tab:table_7}
+\end{table}
+
+Table 5:  Stack technologique du projet
+
+\section{Organisation modulaire du backend}
+
+Le backend est structuré en 5 applications Django indépendantes, chacune gérant un domaine métier spécifique :
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+Application & Responsabilité & Fichiers clés \\
+\hline
+users & Authentification, comptes, profils candidats & models.py, serializers.py, views.py \\
+\hline
+candidatures & Dossiers, documents, notes, services métier & models.py, views.py, services/ \\
+\hline
+administration & Filières, diplômes, épreuves, historique & models.py, views.py \\
+\hline
+scoring & Règles de rejet, configuration scoring & models.py, views.py \\
+\hline
+notifications & Notifications email et WebSocket & models.py, consumers.py, views.py \\
+\hline
+\end{tabular}
+\caption{Tableau 8}
+\label{tab:table_8}
+\end{table}
+
+Table 6: Applications Django du backend
+
+Le répertoire candidatures/services/ contient la logique métier critique :
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+Service & Fichier & Rôle \\
+\hline
+Extraction OCR & extraction.py & Extraction des informations depuis les documents scannés \\
+\hline
+Fuzzy Matching & fuzzy\_matching.py & Correspondance floue des noms de matières \\
+\hline
+Règles de rejet & regles.py & Application des 7 types de règles de rejet automatique \\
+\hline
+Scoring & scoring.py & Calcul du score pondéré par filière \\
+\hline
+Vérification & verification\_document.py & Vérification d'authenticité des documents \\
+\hline
+Invitation PDF & invitation\_pdf.py & Génération des convocations au format PDF \\
+\hline
+\end{tabular}
+\caption{Tableau 9}
+\label{tab:table_9}
+\end{table}
+
+Table 7:  Services métier du module candidatures
+
+\section{Dictionnaire des modèles Django}
+
+Le modèle relationnel est structuré autour de 12 entités principales réparties dans les applications Django. Nous détaillons ci-dessous chaque modèle.
+
+\subsection{Application Users}
+
+Le modèle User étend AbstractBaseUser de Django pour personnaliser l'authentification. L'identification se fait par email et CIN (Carte d'Identité Nationale). Trois rôles sont définis : CANDIDAT, RESPONSABLE et ADMIN, implémentant un contrôle d'accès RBAC.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+Attribut & Type & Contrainte \\
+\hline
+id & UUID & Clé primaire auto-générée \\
+\hline
+email & VARCHAR & UNIQUE, NOT NULL \\
+\hline
+cin & VARCHAR & UNIQUE, NOT NULL \\
+\hline
+role & ENUM & CANDIDAT / RESPONSABLE / ADMIN \\
+\hline
+is\_active & BOOLEAN & Défaut : True \\
+\hline
+password & VARCHAR & Hashé via PBKDF2 \\
+\hline
+\end{tabular}
+\caption{Tableau 10}
+\label{tab:table_10}
+\end{table}
+
+Le modèle Candidat est relié en OneToOne à User et stocke le profil détaillé :
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+Attribut & Type & Contrainte \\
+\hline
+id & UUID & Clé primaire \\
+\hline
+user\_id & FK → User & OneToOne, CASCADE \\
+\hline
+nom & VARCHAR & NOT NULL \\
+\hline
+prenom & VARCHAR & NOT NULL \\
+\hline
+telephone & VARCHAR & Optionnel \\
+\hline
+date\_naissance & DATE & NOT NULL \\
+\hline
+\end{tabular}
+\caption{Tableau 11}
+\label{tab:table_11}
+\end{table}
+
+\subsection{Application Candidatures}
+
+Le modèle Dossier est le modèle central de l'application. Il lie un Candidat à une Filière et contient le statut, les scores calculés et les motifs de rejet éventuels.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+Attribut & Type & Contrainte \\
+\hline
+id & UUID & Clé primaire \\
+\hline
+candidat\_id & FK → Candidat & CASCADE \\
+\hline
+filiere\_id & FK → Filiere & CASCADE \\
+\hline
+statut & ENUM & 11 valeurs possibles \\
+\hline
+score & DECIMAL & Score dossier calculé \\
+\hline
+score\_final & DECIMAL & 40\% dossier + 60\% épreuve \\
+\hline
+rang\_final & INT & Classement par filière \\
+\hline
+mention & ENUM & Auto-calculé \\
+\hline
+moyenne\_generale & DECIMAL & Moyenne des semestres \\
+\hline
+\end{tabular}
+\caption{Tableau 12}
+\label{tab:table_12}
+\end{table}
+
+Le modèle Document gère les pièces justificatives uploadées par le candidat :
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+Attribut & Type & Contrainte \\
+\hline
+id & UUID & Clé primaire \\
+\hline
+dossier\_id & FK → Dossier & CASCADE \\
+\hline
+type\_doc & ENUM & DIPLOME / RELEVE / CIN / PHOTO \\
+\hline
+fichier & FILE & Stocké dans media/dossiers/{uuid}/ \\
+\hline
+qualite\_ocr & DECIMAL & Score de confiance OCR \\
+\hline
+\end{tabular}
+\caption{Tableau 13}
+\label{tab:table_13}
+\end{table}
+
+Le modèle NoteSemestre remplace l'ancienne approche par NoteMatiere. Il intègre la moyenne par semestre, la session et la mention calculée dynamiquement :
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+Attribut & Type & Contrainte \\
+\hline
+id & UUID & Clé primaire \\
+\hline
+dossier\_id & FK → Dossier & CASCADE \\
+\hline
+semestre & ENUM & S1 à S6 \\
+\hline
+moyenne & DECIMAL & Plage stricte [10.00, 20.00] \\
+\hline
+session & ENUM & NORMALE / RATTRAPAGE \\
+\hline
+mention & ENUM & Auto-calculé (editable=False) \\
+\hline
+\end{tabular}
+\caption{Tableau 14}
+\label{tab:table_14}
+\end{table}
+
+\subsection{Application Administration et Scoring}
+
+Le modèle Filiere définit les filières du cycle ingénieur avec leurs paramètres :
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+Attribut & Type & Contrainte \\
+\hline
+id & UUID & Clé primaire \\
+\hline
+nom & VARCHAR & NOT NULL \\
+\hline
+code & VARCHAR & UNIQUE (TDI, IACS, IAA, G2ER) \\
+\hline
+niveau & ENUM & BAC2 / BAC3 \\
+\hline
+places\_disponibles & INT & Défaut : 30 \\
+\hline
+\end{tabular}
+\caption{Tableau 15}
+\label{tab:table_15}
+\end{table}
+
+Les modèles EpreuveEcrite et NoteEcrite gèrent la logistique du concours écrit :
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+Modèle & Attributs clés & Rôle \\
+\hline
+EpreuveEcrite & nom, date\_epreuve, seuil\_admission, statut & Gestion de l'épreuve par filière \\
+\hline
+NoteEcrite & note, resultat, rang\_final & Note individuelle et classement \\
+\hline
+ConfigScoring & matiere, poids, bonus\_mention & Pondération scoring par filière \\
+\hline
+RegleRejet & type\_regle, parametre, is\_active, message & Règle de rejet configurable \\
+\hline
+HistoriqueAction & action, commentaire, timestamp & Traçabilité des décisions \\
+\hline
+\end{tabular}
+\caption{Tableau 16}
+\label{tab:table_16}
+\end{table}
+
+Table 8: Modèles d'administration et scoring
+
+\section{Relations et cardinalités}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+Relation & Type & Cardinalité \\
+\hline
+User → Candidat & OneToOne & 1..1 \\
+\hline
+Candidat → Dossier & OneToMany & 1..* \\
+\hline
+Dossier → Document & OneToMany & 1..4 \\
+\hline
+Dossier → NoteSemestre & OneToMany & 1..6 \\
+\hline
+Filiere → Dossier & OneToMany & 1..* \\
+\hline
+Filiere → RegleRejet & OneToMany & 1..* \\
+\hline
+Filiere → EpreuveEcrite & OneToMany & 1..* \\
+\hline
+EpreuveEcrite → NoteEcrite & OneToMany & 1..* \\
+\hline
+Dossier → HistoriqueAction & OneToMany & 1..* \\
+\hline
+User → Notification & OneToMany & 1..* \\
+\hline
+\end{tabular}
+\caption{Tableau 17}
+\label{tab:table_17}
+\end{table}
+
+Table 9: Relations et cardinalités du modèle de données
+
+\section{Machine d'états du dossier}
+
+Le dossier suit une machine d'états stricte implémentée dans la méthode changer\_statut() du modèle. Chaque transition crée automatiquement un enregistrement HistoriqueAction pour la traçabilité :
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+État & Transitions possibles \\
+\hline
+BROUILLON & → EN\_TRAITEMENT (soumission) \\
+\hline
+EN\_TRAITEMENT & → REJETE\_AUTO | EN\_ATTENTE | INCOMPLET | SUSPECT \\
+\hline
+INCOMPLET & → EN\_TRAITEMENT (complétion) \\
+\hline
+SUSPECT & → EN\_ATTENTE | REJETE\_FINAL (décision manuelle) \\
+\hline
+EN\_ATTENTE & → PRESELECTIONNE | REJETE\_FINAL \\
+\hline
+PRESELECTIONNE & → ADMIS\_FINAL | RECALE\_FINAL | ABSENT\_ECRIT \\
+\hline
+\end{tabular}
+\caption{Tableau 18}
+\label{tab:table_18}
+\end{table}
+
+Table 10: Tableau 2.6 : Machine d'états du dossier de candidature
+
+\section{Conclusion}
+
+Ce chapitre a détaillé l'architecture Full-Stack de la plateforme et le modèle de données relationnel complet. L'organisation modulaire en 5 applications Django assure une séparation claire des responsabilités. Le chapitre suivant présentera la logique métier et les algorithmes de scoring et d'OCR.
+

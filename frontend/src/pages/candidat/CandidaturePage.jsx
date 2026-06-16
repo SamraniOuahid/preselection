@@ -72,7 +72,7 @@ export default function CandidaturePage() {
   const goNext = async () => {
     if (step === 1 && !selectedFiliere) { setError('Veuillez sélectionner une filière.'); return; }
     if (step === 2) { 
-      const fields = ['diplome_obtenu', 'etablissement_origine', 'annee_obtention', 'moyenne_generale', 'code_massar', 'cne'];
+      const fields = ['diplome_obtenu', 'etablissement_origine', 'annee_obtention', 'moyenne_generale', 'code_massar'];
       if (getValues('diplome_obtenu') === 'Autre') {
         fields.push('diplome_obtenu_autre');
       }
@@ -106,7 +106,7 @@ export default function CandidaturePage() {
         mention: data.mention || '',
         moyenne_generale: parseFloat(data.moyenne_generale),
         code_massar: data.code_massar,
-        cne: data.cne,
+        cne: data.code_massar,
         notes_semestres: notesSemestres.map(n => ({ ...n, moyenne: parseFloat(n.moyenne) })),
       };
       const { data: dossier } = await API.post('/dossiers/', payload);
@@ -328,19 +328,17 @@ export default function CandidaturePage() {
               </div>
             </div>
 
-            <div className="ensa-form-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-              <div>
-                <label className="label">Code Massar</label>
-                <input className={`input font-mono ${errors.code_massar ? 'input-error' : ''}`} placeholder="R123456789"
-                  {...register('code_massar', { required: 'Obligatoire' })} />
-                {errors.code_massar && <p className="error-text">{errors.code_massar.message}</p>}
-              </div>
-              <div>
-                <label className="label">CNE</label>
-                <input className={`input font-mono ${errors.cne ? 'input-error' : ''}`} placeholder="1234567890"
-                  {...register('cne', { required: 'Obligatoire' })} />
-                {errors.cne && <p className="error-text">{errors.cne.message}</p>}
-              </div>
+            <div>
+              <label className="label">Code Massar / CNE</label>
+              <input className={`input font-mono ${errors.code_massar ? 'input-error' : ''}`} placeholder="R123456789"
+                {...register('code_massar', {
+                  required: 'Obligatoire',
+                  pattern: {
+                    value: /^[A-Za-z]\d{9}$/,
+                    message: 'Format invalide (ex: R123456789 — 1 lettre + 9 chiffres)'
+                  }
+                })} />
+              {errors.code_massar && <p className="error-text">{errors.code_massar.message}</p>}
             </div>
           </div>
         </div>

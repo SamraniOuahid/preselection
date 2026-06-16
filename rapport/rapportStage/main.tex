@@ -1,0 +1,237 @@
+% ============================================================================
+%  RAPPORT DE STAGE — EST FÈS
+%  Fichier maître : main.tex
+%  Architecture modulaire avec \input{sections/...}
+% ============================================================================
+\documentclass[12pt,a4paper]{report}
+
+% =============================================
+% 1. ENCODAGE ET LANGUE
+% =============================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+% =============================================
+% 2. POLICE : Latin Modern Roman (12pt)
+% =============================================
+\usepackage{lmodern}
+
+% =============================================
+% 3. MARGES : uniformes 25mm
+% =============================================
+\usepackage[margin=25mm]{geometry}
+
+% =============================================
+% 4. INTERLIGNE : 1.15
+% =============================================
+\usepackage{setspace}
+\setstretch{1.15}
+
+% =============================================
+% 5. LÉGENDES NORMALISÉES
+% =============================================
+\addto\captionsfrench{%
+  \renewcommand{\figurename}{Fig}%
+  \renewcommand{\tablename}{Tableau}%
+}
+
+% =============================================
+% 6. PACKAGES UTILITAIRES
+% =============================================
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{calc}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{fancyhdr}
+
+% Configuration de hyperref
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue,
+  pdfauthor={SAMRANI OUAHID},
+  pdftitle={Plateforme Intelligente de Présélection des Candidats},
+  pdfsubject={Rapport de Stage — EST Fès}
+}
+
+% =============================================
+% 7. CALIBRATION DES TITRES (titlesec)
+% =============================================
+\usepackage{titlesec}
+
+% Chapitres : 18pt, Gras
+\titleformat{\chapter}[display]
+  {\normalfont\fontsize{18}{22}\bfseries}
+  {\chaptertitlename\ \thechapter}
+  {20pt}
+  {}
+\titlespacing*{\chapter}{0pt}{-20pt}{30pt}
+
+% Sections : 14pt, Gras
+\titleformat{\section}
+  {\normalfont\fontsize{14}{17}\bfseries}
+  {\thesection}{1em}{}
+
+% Sous-sections : 12pt, Gras
+\titleformat{\subsection}
+  {\normalfont\fontsize{12}{15}\bfseries}
+  {\thesubsection}{1em}{}
+
+% Sous-sous-sections : 12pt, Italique
+\titleformat{\subsubsection}
+  {\normalfont\fontsize{12}{15}\bfseries\itshape}
+  {\thesubsubsection}{1em}{}
+
+% =============================================
+% 8. CONFIGURATION DES LÉGENDES
+% =============================================
+\captionsetup{
+  font=small,
+  labelfont=bf,
+  justification=centering,
+  skip=8pt
+}
+
+% =============================================
+% 9. EN-TÊTES ET PIEDS DE PAGE
+% =============================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+% =============================================
+% DÉBUT DU DOCUMENT
+% =============================================
+\begin{document}
+
+% =============================================
+% PAGE DE GARDE OFFICIELLE (modèle rapport2.pdf)
+% =============================================
+\begin{titlepage}
+    % ---- EN-TÊTE LOGOS (Centrés verticalement) ----
+    \begin{center}
+        \includegraphics[height=2.5cm]{media/image1.png}\\[0.2cm]
+        \includegraphics[height=2.0cm]{media/image2.png}
+    \end{center}
+
+    \vfill
+
+    % ---- TEXTE CENTRAL ----
+    \begin{center}
+        {\fontsize{24}{30}\bfseries RAPPORT DE STAGE\par}
+        \vspace{0.6cm}
+        {\fontsize{14}{17}\bfseries DIPLÔME BACHELOR EN TECHNOLOGIE\par}
+        \vspace{0.3cm}
+        {\fontsize{14}{17}\bfseries FILIÈRE : GÉNIE LOGICIEL (GL)\par}
+
+        \vfill
+
+        % ---- SUJET (dans un cadre) ----
+        \fbox{%
+            \begin{minipage}{0.90\textwidth}
+                \centering
+                \vspace{0.4cm}
+                {\fontsize{15}{19}\bfseries Conception et Développement d'une Plateforme\\
+                Intelligente de Présélection des Candidats\par}
+                \vspace{0.4cm}
+            \end{minipage}%
+        }
+    \end{center}
+
+    \vfill
+
+    % ---- RÉALISÉ PAR & JURY OFFICIEL (Alignés à gauche) ----
+    \begin{flushleft}
+        {\large \textbf{Réalisé par :}\par}
+        \vspace{0.1cm}
+        {\large SAMRANI OUAHID\par}
+
+        \vspace{0.8cm}
+
+        {\large \textbf{Soutenu devant le jury composé de :}\par}
+        \vspace{0.2cm}
+        \begin{itemize}[leftmargin=1.5cm, label=--]
+            \item \textbf{M. YOUNES AZIZ BACHIRI} (Encadrant académique)
+            \item \textbf{M. DAHBI MAROUANE} (Encadrant entreprise)
+            \item \textbf{M. ABDELHAY ZOIZOU} (Membre du jury)
+            \item \textbf{M. NAJIB NFISSI} (Membre du jury)
+        \end{itemize}
+    \end{flushleft}
+
+    \vfill
+
+    % ---- PIED DE PAGE ----
+    \begin{center}
+        {\large \textbf{Lieu de stage :} ENSA Béni Mellal --- USMS\par}
+        \vspace{0.1cm}
+        {\large \textbf{Période :} Du 06/04/2026 au 13/06/2026\par}
+        \vspace{0.1cm}
+        {\large \textbf{Année Universitaire :} 2025--2026\par}
+    \end{center}
+\end{titlepage}
+
+% 1. Insertion de la page blanche sans numéro
+\clearpage
+\thispagestyle{empty} 
+\null
+\clearpage
+
+% 2. Activation de la numérotation romaine FORCÉE à 1
+\pagenumbering{roman}
+\setcounter{page}{1} % <-- CETTE LIGNE FORCE LE DÉMARRAGE À "i" SUR LES REMERCIEMENTS
+
+% --- Remerciements ---
+\input{sections/remerciements}
+
+% --- Résumé et Abstract ---
+\input{sections/resume}
+\input{sections/abstract}
+
+% --- Tables automatiques ---
+\tableofcontents
+\listoffigures
+\listoftables
+
+% --- Liste des abréviations ---
+\input{sections/abreviations}
+
+% =============================================
+% CONTENU PRINCIPAL (numérotation arabe)
+% =============================================
+\clearpage
+\pagenumbering{arabic}
+
+% --- Introduction Générale ---
+\input{sections/introduction}
+
+% --- Chapitre 1 : Contexte du Projet ---
+\input{sections/chapitre1}
+
+% --- Chapitre 2 : Architecture et Base de données ---
+\input{sections/chapitre2}
+
+% --- Chapitre 3 : Logique Métier et Algorithmes ---
+\input{sections/chapitre3}
+
+% --- Chapitre 4 : Implémentation, Asynchronisme et Tests ---
+\input{sections/chapitre4}
+
+% --- Conclusion Générale ---
+\input{sections/conclusion}
+
+% --- Bibliographie ---
+\input{sections/bibliographie}
+
+\end{document}

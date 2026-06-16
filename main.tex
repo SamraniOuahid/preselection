@@ -1,0 +1,120 @@
+\documentclass[12pt,a4paper]{report}
+
+% Encodage et langue
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+% Police : Latin Modern Roman
+\usepackage{lmodern}
+
+% Marges de 25mm
+\usepackage[margin=25mm]{geometry}
+
+% Interligne de 1.15
+\usepackage{setspace}
+\setstretch{1.15}
+
+% Normalisation des titres avec titlesec
+\usepackage{titlesec}
+\titleformat{\chapter}[hang]
+  {\normalfont\fontsize{18}{22}\bfseries}{\thechapter.}{1em}{}
+\titleformat{\section}
+  {\normalfont\fontsize{14}{17}\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\fontsize{12}{14}\bfseries}{\thesubsection}{1em}{}
+
+% Espacement autour des titres
+\titlespacing*{\chapter}{0pt}{-20pt}{20pt}
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+% Tableaux et graphiques
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{multicol}
+
+% Légendes
+\usepackage{caption}
+\renewcommand{\figurename}{Fig}
+\renewcommand{\tablename}{Table}
+
+% Liens cliquables
+\usepackage[hidelinks]{hyperref}
+
+\begin{document}
+
+% ==========================================
+% PAGE DE GARDE
+% ==========================================
+\begin{titlepage}
+    \centering
+    
+    \vspace*{1cm}
+    
+    {\large\textbf{Université Sidi Mohamed Ben Abdellah}} \\[0.5cm]
+    {\large\textbf{École Supérieure de Technologie --- Fès}} \\[1.5cm]
+    
+    {\large Filière : Génie Logiciel} \\[0.5cm]
+    {\large Diplôme : Bachelor Universitaire de Technologie} \\[2cm]
+    
+    {\huge \textbf{RAPPORT DE STAGE DE FIN D'ÉTUDES}} \\[1.5cm]
+    
+    {\Large \textbf{Conception et Développement d'une Plateforme Intelligente de Présélection des Candidats}} \\[2.5cm]
+    
+    \begin{tabular}{ll}
+        \textbf{Réalisé par} : & SAMRANI Ouahid \\[0.5cm]
+        \textbf{Encadrant académique} : & M. YOUNES AZIZ BACHIRI \\[0.5cm]
+        \textbf{Encadrant professionnel} : & M. DAHBI MAROUANE \\[0.5cm]
+        \textbf{Lieu de stage} : & ENSA Béni Mellal --- USMS \\[0.5cm]
+        \textbf{Période} : & Du 06/04/2026 au 13/06/2026 \\
+    \end{tabular}
+    
+    \vfill
+    
+    {\large \textbf{Année universitaire : 2025-2026}}
+    
+    \vspace*{1cm}
+\end{titlepage}
+
+% Pagination romaine pour les sections liminaires
+\pagenumbering{roman}
+
+% ==========================================
+% SECTIONS LIMINAIRES
+% ==========================================
+\input{sections/remerciements}
+\input{sections/resume}
+\input{sections/abstract}
+
+% ==========================================
+% INDEX
+% ==========================================
+\tableofcontents
+\listoffigures
+\listoftables
+\input{sections/abreviations}
+
+\clearpage
+
+% ==========================================
+% CORPS DU TEXTE
+% ==========================================
+\pagenumbering{arabic}
+
+\include{sections/introduction}
+\include{sections/chapitre1}
+\include{sections/chapitre2}
+\include{sections/chapitre3}
+\include{sections/chapitre4}
+\include{sections/conclusion}
+
+% ==========================================
+% BIBLIOGRAPHIE
+% ==========================================
+\include{sections/bibliographie}
+
+\end{document}

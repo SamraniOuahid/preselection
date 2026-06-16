@@ -186,7 +186,7 @@ class ConvocationPDFView(APIView):
             return Response({'error': 'Accès refusé'}, status=403)
 
         # Vérifier que le candidat est admis à l'écrit
-        if dossier.statut != 'ADMIS_FINAL':
+        if dossier.statut not in ['ADMIS_FINAL', 'CONVOQUE_ORAL', 'ORAL_ACCEPTE', 'ORAL_REFUSE', 'INSCRIT']:
             return Response(
                 {'error': 'La convocation n\'est disponible que pour les candidats admis.'},
                 status=400

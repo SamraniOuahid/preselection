@@ -299,21 +299,21 @@ export default function AdminAnalyticsDashboard() {
           {fraude_scatter && fraude_scatter.length > 0 ? (
             <div>
               <p style={{ fontSize: 11, color: '#5D6D7E', marginBottom: 8, lineHeight: 1.5 }}>
-                <strong>Axe X</strong> : Note déclarée par le candidat —
-                <strong> Axe Y</strong> : Note extraite par OCR.
+                <strong>Axe X</strong> : Moyenne générale déclarée par le candidat —
+                <strong> Axe Y</strong> : Moyenne calculée à partir des semestres (système).
                 Les points sur la <span style={{ color: '#27AE60', fontWeight: 700 }}>diagonale</span> sont
-                conformes. Les <span style={{ color: '#E74C3C', fontWeight: 700 }}>points isolés</span> signalent
-                une fraude potentielle.
+                conformes. Les <span style={{ color: '#E74C3C', fontWeight: 700 }}>points suspects</span> signalent
+                une incohérence potentielle.
               </p>
               <ResponsiveContainer width="100%" height={320}>
                 <ScatterChart margin={{ left: 10, right: 20, top: 10, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#EBEDEF" />
-                  <XAxis type="number" dataKey="note_declaree" name="Note déclarée"
+                  <XAxis type="number" dataKey="note_declaree" name="Moy. déclarée"
                     domain={[0, 20]} tick={{ fontSize: 11, fill: '#5D6D7E' }}
-                    label={{ value: 'Note déclarée', position: 'insideBottom', offset: -5, style: { fontSize: 11, fill: '#5D6D7E' } }} />
-                  <YAxis type="number" dataKey="note_extraite" name="Note extraite (OCR)"
+                    label={{ value: 'Moy. déclarée', position: 'insideBottom', offset: -5, style: { fontSize: 11, fill: '#5D6D7E' } }} />
+                  <YAxis type="number" dataKey="note_extraite" name="Moy. semestres"
                     domain={[0, 20]} tick={{ fontSize: 11, fill: '#5D6D7E' }}
-                    label={{ value: 'Note OCR', angle: -90, position: 'insideLeft', style: { fontSize: 11, fill: '#5D6D7E' } }} />
+                    label={{ value: 'Moy. semestres', angle: -90, position: 'insideLeft', style: { fontSize: 11, fill: '#5D6D7E' } }} />
                   <ZAxis type="number" dataKey="ecart" range={[30, 200]} name="Écart" />
                   <Tooltip content={<CustomTooltip />} />
                   <Scatter name="Conformes" data={fraude_scatter.filter(d => !d.is_suspect)}
@@ -330,7 +330,7 @@ export default function AdminAnalyticsDashboard() {
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#5D6D7E' }}>
                   <span style={{ width: 10, height: 10, background: '#E74C3C', display: 'inline-block', transform: 'rotate(45deg)' }} />
-                  Suspects (écart &gt; 0.5)
+                  Suspects (incohérence détectée)
                 </span>
               </div>
             </div>
